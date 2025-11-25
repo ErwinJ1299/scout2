@@ -12,6 +12,13 @@ import {
   User,
   LogOut,
   LayoutDashboard,
+  LineChart,
+  Sparkles,
+  Bot,
+  MessageCircle,
+  Watch,
+  Pill,
+  Gamepad2,
 } from 'lucide-react';
 
 import { NavMain } from '@/components/nav-main';
@@ -49,15 +56,79 @@ export function PatientSidebar({ ...props }: React.ComponentProps<typeof Sidebar
       isActive: false,
     },
     {
-      title: 'Reminders',
-      url: '/patient/add-reminder',
-      icon: Bell,
+      title: 'Charts',
+      url: '/patient/charts',
+      icon: LineChart,
+      isActive: false,
+    },
+    {
+      title: 'Wearables',
+      url: '/patient/wearables',
+      icon: Watch,
+      isActive: false,
+    },
+    {
+      title: 'Health Prediction',
+      url: '/patient/health-prediction',
+      icon: TrendingUp,
+      isActive: false,
+      badge: 'NEW',
+    },
+    {
+      title: 'AI Health Coach',
+      url: '/healthcoach',
+      icon: Bot,
+      isActive: false,
+    },
+    {
+      title: 'Messages',
+      url: '/patient/messages',
+      icon: MessageCircle,
+      isActive: false,
+    },
+    {
+      title: 'Medicines',
+      url: '/patient/medicines',
+      icon: Pill,
       isActive: false,
     },
     {
       title: 'Progress',
-      url: '/patient/dashboard',
+      url: '/patient/progress',
       icon: Trophy,
+      isActive: false,
+    },
+    {
+      title: 'HealthVerse',
+      url: '/healthverse',
+      icon: Gamepad2,
+      isActive: false,
+      badge: 'FUN',
+    },
+    {
+      title: 'Wellness',
+      url: '/patient/wellness',
+      icon: Sparkles,
+      isActive: false,
+      items: [
+        {
+          title: 'Wallet',
+          url: '/patient/wellness',
+        },
+        {
+          title: 'Marketplace',
+          url: '/patient/wellness/marketplace',
+        },
+        {
+          title: 'My Rewards',
+          url: '/patient/wellness/rewards',
+        },
+      ],
+    },
+    {
+      title: 'Reminders',
+      url: '/patient/add-reminder',
+      icon: Bell,
       isActive: false,
     },
   ];

@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { ModernTimePicker } from '@/components/time-picker/ModernTimePicker';
 import { ArrowLeft, Bell, Calendar, Clock, Pill, Droplet, Activity, CheckCircle2 } from 'lucide-react';
 import { Reminder } from '@/types';
 
@@ -212,13 +213,9 @@ export default function AddReminderPage() {
                 <Label htmlFor="time" className="text-sm font-medium">
                   Reminder Time <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="time"
-                  type="time"
+                <ModernTimePicker
                   value={formData.time}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, time: e.target.value }))}
-                  required
-                  className="text-lg"
+                  onChange={(newTime) => setFormData((prev) => ({ ...prev, time: newTime }))}
                 />
               </div>
             </CardContent>

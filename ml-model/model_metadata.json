@@ -1,0 +1,24 @@
+{
+  "feature_columns": [
+    "heart_rate_mean",
+    "heart_rate_std",
+    "heart_rate_max",
+    "heart_rate_min",
+    "steps_mean",
+    "steps_std",
+    "steps_total",
+    "sleep_hours_mean",
+    "sleep_hours_std",
+    "calories_mean",
+    "calories_std",
+    "age",
+    "gender_encoded",
+    "days_with_data",
+    "trend_heart_rate",
+    "trend_steps",
+    "trend_sleep"
+  ],
+  "n_features": 17,
+  "model_version": "1.0.0",
+  "trained_date": "2025-11-21T18:30:14.770883"
+}

@@ -1,5 +1,5 @@
 "use client";
-import { User, Lock, ArrowRight } from 'lucide-react';
+import { User, Lock, ArrowRight, UserPlus, Stethoscope } from 'lucide-react';
 
 /**
  * Props for the LoginForm component.
@@ -7,11 +7,19 @@ import { User, Lock, ArrowRight } from 'lucide-react';
 interface LoginFormProps {
   email: string;
   password: string;
+  name?: string;
+  role?: 'patient' | 'doctor';
+  specialization?: string;
   isLoading: boolean;
   error: string;
+  isSignUp?: boolean;
   onEmailChange: (email: string) => void;
   onPasswordChange: (password: string) => void;
+  onNameChange?: (name: string) => void;
+  onRoleChange?: (role: 'patient' | 'doctor') => void;
+  onSpecializationChange?: (specialization: string) => void;
   onSubmit: (e: React.FormEvent) => void;
+  onToggleMode?: () => void;
 }
 
 /**
@@ -20,19 +28,108 @@ interface LoginFormProps {
 export function LoginForm({
   email,
   password,
+  name = '',
+  role = 'patient',
+  specialization = '',
   isLoading,
   error,
+  isSignUp = false,
   onEmailChange,
   onPasswordChange,
+  onNameChange,
+  onRoleChange,
+  onSpecializationChange,
   onSubmit,
+  onToggleMode,
 }: LoginFormProps) {
   return (
     <div className="w-full max-w-sm p-8 space-y-6 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl">
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-white">Welcome Back</h2>
-        <p className="mt-2 text-sm text-gray-300">Sign in to continue</p>
+        <h2 className="text-3xl font-bold text-white">
+          {isSignUp ? 'Create Account' : 'Welcome Back'}
+        </h2>
+        <p className="mt-2 text-sm text-gray-300">
+          {isSignUp ? 'Join our health monitoring platform' : 'Sign in to continue'}
+        </p>
       </div>
-      <form onSubmit={onSubmit} className="space-y-8">
+      <form onSubmit={onSubmit} className="space-y-6">
+        {/* Name Input - Only for Sign Up */}
+        {isSignUp && (
+          <>
+            <div className="relative z-0">
+              <input
+                type="text"
+                id="floating_name"
+                value={name}
+                onChange={(e) => onNameChange?.(e.target.value)}
+                className="block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+                placeholder=" "
+                required
+              />
+              <label
+                htmlFor="floating_name"
+                className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+              >
+                <UserPlus className="inline-block mr-2 -mt-1" size={16} />
+                Full Name
+              </label>
+            </div>
+
+            {/* Role Selection */}
+            <div className="space-y-2">
+              <label className="text-sm text-gray-300 font-medium">I am a:</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => onRoleChange?.('patient')}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    role === 'patient'
+                      ? 'border-blue-500 bg-blue-500/20 text-white'
+                      : 'border-white/30 text-gray-300 hover:border-white/50'
+                  }`}
+                >
+                  <User className="mx-auto mb-1" size={20} />
+                  <span className="text-sm">Patient</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRoleChange?.('doctor')}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    role === 'doctor'
+                      ? 'border-blue-500 bg-blue-500/20 text-white'
+                      : 'border-white/30 text-gray-300 hover:border-white/50'
+                  }`}
+                >
+                  <Stethoscope className="mx-auto mb-1" size={20} />
+                  <span className="text-sm">Doctor</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Specialization - Only for Doctors */}
+            {role === 'doctor' && (
+              <div className="relative z-0">
+                <input
+                  type="text"
+                  id="floating_specialization"
+                  value={specialization}
+                  onChange={(e) => onSpecializationChange?.(e.target.value)}
+                  className="block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+                  placeholder=" "
+                  required
+                />
+                <label
+                  htmlFor="floating_specialization"
+                  className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                >
+                  <Stethoscope className="inline-block mr-2 -mt-1" size={16} />
+                  Specialization (e.g., Cardiologist, General Physician)
+                </label>
+              </div>
+            )}
+          </>
+        )}
+
         {/* Email Input with Animated Label */}
         <div className="relative z-0">
           <input
@@ -87,7 +184,7 @@ export function LoginForm({
           disabled={isLoading}
           className="group w-full flex items-center justify-center py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg text-white font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 transition-all duration-300"
         >
-          {isLoading ? 'Signing In...' : 'Sign In'}
+          {isLoading ? (isSignUp ? 'Creating Account...' : 'Signing In...') : (isSignUp ? 'Create Account' : 'Sign In')}
           {!isLoading && <ArrowRight className="ml-2 h-5 w-5 transform group-hover:translate-x-1 transition-transform" />}
         </button>        {/* Divider */}
         <div className="relative flex py-2 items-center">
@@ -109,7 +206,13 @@ export function LoginForm({
 
       </form>
        <p className="text-center text-xs text-gray-400">
-        Don't have an account? <a href="#" className="font-semibold text-blue-400 hover:text-blue-300 transition">Sign Up</a>
+        {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+        <button 
+          onClick={onToggleMode}
+          className="font-semibold text-blue-400 hover:text-blue-300 transition"
+        >
+          {isSignUp ? 'Sign In' : 'Sign Up'}
+        </button>
       </p>
     </div>
   );

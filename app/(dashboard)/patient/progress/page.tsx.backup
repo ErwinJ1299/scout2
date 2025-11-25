@@ -1,0 +1,326 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/store/auth.store';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Trophy,
+  Flame,
+  Star,
+  Award,
+  TrendingUp,
+  Target,
+  Plus,
+  Calendar,
+  Loader2,
+} from 'lucide-react';
+
+interface Goal {
+  id: string;
+  goalType: string;
+  targetValue: number;
+  currentValue: number;
+  progress: number;
+  title: string;
+  status: string;
+  deadline?: any;
+}
+
+interface Achievement {
+  id: string;
+  achievementId: string;
+  title: string;
+  description: string;
+  icon: string;
+  points: number;
+  earnedAt: any;
+}
+];
+
+// Define level thresholds
+const LEVELS = [
+  { level: 1, name: 'Beginner', minPoints: 0, maxPoints: 49, icon: '🌱' },
+  { level: 2, name: 'Novice', minPoints: 50, maxPoints: 99, icon: '🌿' },
+  { level: 3, name: 'Intermediate', minPoints: 100, maxPoints: 199, icon: '🌳' },
+  { level: 4, name: 'Advanced', minPoints: 200, maxPoints: 399, icon: '⭐' },
+  { level: 5, name: 'Expert', minPoints: 400, maxPoints: 599, icon: '💎' },
+  { level: 6, name: 'Master', minPoints: 600, maxPoints: 999, icon: '👑' },
+  { level: 7, name: 'Legend', minPoints: 1000, maxPoints: Infinity, icon: '🏆' },
+];
+
+export default function ProgressPage() {
+  const router = useRouter();
+  const { user, userRole, loading } = useAuthStore();
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [progress, setProgress] = useState<GamificationProgress | null>(null);
+  const [totalReadings, setTotalReadings] = useState(0);
+
+  useEffect(() => {
+    if (!loading && (!user || userRole !== 'patient')) {
+      router.push('/login');
+    }
+  }, [user, userRole, loading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribePatient = FirestoreService.subscribeToPatient(user.uid, setPatient);
+    const unsubscribeProgress = FirestoreService.subscribeToGamificationProgress(
+      user.uid,
+      setProgress
+    );
+
+    // Get total readings count
+    FirestoreService.subscribeToReadings(user.uid, (readings) => {
+      setTotalReadings(readings.length);
+    }, 1000);
+
+    return () => {
+      unsubscribePatient();
+      unsubscribeProgress();
+    };
+  }, [user]);
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const points = progress?.totalPoints || 0;
+  const currentStreak = progress?.currentStreak || 0;
+  const longestStreak = progress?.longestStreak || 0;
+  const earnedBadgeIds = progress?.earnedBadges || [];
+
+  // Calculate current level
+  const currentLevel = LEVELS.find(
+    (level) => points >= level.minPoints && points <= level.maxPoints
+  ) || LEVELS[0];
+  
+  const nextLevel = LEVELS.find((level) => level.level === currentLevel.level + 1);
+  const progressToNextLevel = nextLevel
+    ? ((points - currentLevel.minPoints) / (nextLevel.minPoints - currentLevel.minPoints)) * 100
+    : 100;
+
+  // Check which badges are earned
+  const earnedBadges = BADGES.filter((badge) => {
+    if (badge.type === 'points') {
+      return points >= badge.requirement;
+    } else if (badge.type === 'streak') {
+      return longestStreak >= badge.requirement;
+    } else if (badge.type === 'readings') {
+      return totalReadings >= badge.requirement;
+    }
+    return false;
+  });
+
+  const lockedBadges = BADGES.filter(
+    (badge) => !earnedBadges.find((eb) => eb.id === badge.id)
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Trophy className="h-8 w-8 text-yellow-500" />
+            Your Progress
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Track your achievements and level up your health journey
+          </p>
+        </div>
+      </div>
+
+      {/* Level Card */}
+      <Card className="border-2 border-yellow-500/20 bg-gradient-to-br from-yellow-50 to-orange-50">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <span className="text-4xl">{currentLevel.icon}</span>
+                Level {currentLevel.level}: {currentLevel.name}
+              </CardTitle>
+              <CardDescription className="mt-2 text-base">
+                {points} / {nextLevel ? nextLevel.minPoints : '∞'} points
+              </CardDescription>
+            </div>
+            <div className="text-right">
+              <div className="text-4xl font-bold text-yellow-600">{points}</div>
+              <p className="text-sm text-muted-foreground">Total Points</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Progress to {nextLevel ? `Level ${nextLevel.level}` : 'Max Level'}</span>
+              <span className="font-semibold">{Math.round(progressToNextLevel)}%</span>
+            </div>
+            <Progress value={progressToNextLevel} className="h-3" />
+            {nextLevel && (
+              <p className="text-xs text-muted-foreground">
+                {nextLevel.minPoints - points} more points to reach {nextLevel.name}!
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
+            <Flame className="h-5 w-5 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-orange-600">{currentStreak}</div>
+            <p className="text-xs text-muted-foreground mt-1">consecutive days</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Longest Streak</CardTitle>
+            <TrendingUp className="h-5 w-5 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-purple-600">{longestStreak}</div>
+            <p className="text-xs text-muted-foreground mt-1">personal best</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Readings</CardTitle>
+            <Activity className="h-5 w-5 text-teal-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-teal-600">{totalReadings}</div>
+            <p className="text-xs text-muted-foreground mt-1">health logs</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Earned Badges */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Award className="h-5 w-5 text-yellow-500" />
+            Earned Badges ({earnedBadges.length}/{BADGES.length})
+          </CardTitle>
+          <CardDescription>Achievements you've unlocked</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {earnedBadges.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {earnedBadges.map((badge) => {
+                const Icon = badge.icon;
+                return (
+                  <div
+                    key={badge.id}
+                    className={`${badge.color} p-4 rounded-lg text-white shadow-lg transform hover:scale-105 transition-transform`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Icon className="h-8 w-8 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-bold text-lg">{badge.name}</h3>
+                        <p className="text-sm opacity-90 mt-1">{badge.description}</p>
+                        <Badge className="mt-2 bg-white/20 hover:bg-white/30 border-0">
+                          Unlocked ✓
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Medal className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No badges earned yet. Keep logging your health data to unlock achievements!</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Locked Badges */}
+      {lockedBadges.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-gray-500" />
+              Locked Badges ({lockedBadges.length})
+            </CardTitle>
+            <CardDescription>Keep going to unlock these achievements</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {lockedBadges.map((badge) => {
+                const Icon = badge.icon;
+                let currentValue = 0;
+                if (badge.type === 'points') currentValue = points;
+                else if (badge.type === 'streak') currentValue = longestStreak;
+                else if (badge.type === 'readings') currentValue = totalReadings;
+
+                const progressPercent = (currentValue / badge.requirement) * 100;
+
+                return (
+                  <div
+                    key={badge.id}
+                    className="bg-gray-100 p-4 rounded-lg border-2 border-dashed border-gray-300 opacity-75"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Icon className="h-8 w-8 flex-shrink-0 text-gray-400" />
+                      <div className="flex-1">
+                        <h3 className="font-bold text-lg text-gray-700">{badge.name}</h3>
+                        <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
+                        <div className="mt-3 space-y-1">
+                          <Progress value={progressPercent} className="h-2" />
+                          <p className="text-xs text-gray-500">
+                            {currentValue} / {badge.requirement}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Motivational Card */}
+      <Card className="bg-gradient-to-r from-teal-500 to-blue-500 text-white">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold mb-2">Keep Up the Great Work! 🎉</h3>
+              <p className="text-white/90">
+                You're doing amazing! Every reading brings you closer to better health.
+              </p>
+            </div>
+            <Heart className="h-16 w-16 opacity-50" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -116,6 +116,204 @@ export interface GamificationProgress {
   lastUpdated: Date;
 }
 
+// Wellness Coins System Types
+export interface UserStats {
+  userId: string;
+  totalPoints: number; // Health Points (HP)
+  currentStreak: number;
+  longestStreak: number;
+  achievementsCount: number;
+  rewardTokens?: number; // Wellness Coins (WC)
+  totalTokensEarned?: number;
+  totalTokensSpent?: number;
+  lastConversionDate?: Date;
+  hpConvertedToday?: number;
+}
+
+export interface WellnessTransaction {
+  id: string;
+  userId: string;
+  type: 'credit' | 'debit';
+  source: 'conversion' | 'reward_redeem' | 'admin_grant';
+  hpUsed?: number;
+  tokens: number;
+  timestamp: Date;
+  description?: string;
+}
+
+export interface WellnessReward {
+  id: string;
+  title: string;
+  costTokens: number;
+  category: 'Pharmacy' | 'Fitness' | 'Nutrition' | 'Services' | 'Premium';
+  imageUrl?: string;
+  description?: string;
+  externalUrl?: string;
+  stock?: number | null;
+  active: boolean;
+  terms?: string;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface RewardRedemption {
+  id: string;
+  rewardId: string;
+  userId: string;
+  rewardTitle: string;
+  rewardCategory?: string;
+  costTokens: number;
+  code: string; // Unique redemption code
+  redeemedAt: Date | any;
+  status: 'active' | 'used' | 'expired';
+  expiresAt?: Date | any;
+  externalUrl?: string | null;
+}
+
+// ==================== OUTCOME-BASED REWARDS ====================
+
+export type MetricType = 'glucose' | 'bp' | 'steps' | 'weight';
+export type ImprovementDirection = 'decrease' | 'increase' | 'range';
+
+export interface OutcomeRule {
+  id: string;
+  metric: MetricType;
+  description: string;
+  windowDays: number; // Evaluation window (usually 7 or 14)
+  minChange: number; // Minimum improvement threshold
+  direction: ImprovementDirection;
+  targetMin?: number; // Target range minimum (optional)
+  targetMax?: number; // Target range maximum (optional)
+  rewardHp: number; // Health Points reward
+  rewardWc: number; // Wellness Coins reward
+  cooldownDays: number; // Cannot reward twice within this period
+  active: boolean;
+  createdAt: Date | any;
+}
+
+export interface OutcomeReward {
+  id: string;
+  userId: string;
+  metric: MetricType;
+  ruleId: string; // Which rule triggered this reward
+  periodStart: Date | any; // Evaluation window start
+  periodEnd: Date | any; // Evaluation window end
+  improvementValue: number; // Actual improvement (e.g., -15 mg/dL)
+  currentAverage: number; // Current window average
+  previousAverage: number; // Previous window average
+  rewardHp: number;
+  rewardWc: number;
+  createdAt: Date | any;
+}
+
+export interface OutcomeEvaluationResult {
+  ruleId: string;
+  metric: MetricType;
+  eligible: boolean;
+  reason?: string;
+  improvementValue?: number;
+  rewardHp?: number;
+  rewardWc?: number;
+  currentAverage?: number;
+  previousAverage?: number;
+}
+
+// ========== SMART MEDICINE ORDERING SYSTEM ==========
+
+export interface MedicineOrder {
+  id: string;
+  userId: string;
+  medicineName: string;
+  source: "manual" | "clinical_note" | "prescription_ocr";
+  partner: "pharmeasy" | "tata1mg" | "netmeds" | "apollo" | "other";
+  redirectUrl: string;
+  createdAt: string | Date;
+  noteId?: string;
+  prescriptionId?: string;
+}
+
+export interface PrescriptionUpload {
+  id: string;
+  userId: string;
+  filePath?: string;
+  extractedMedicines?: string[];
+  createdAt: string | Date;
+}
+
+export interface Challenge {
+  granted: OutcomeEvaluationResult[];
+  checkedRules: number;
+  message: string;
+}
+
+export interface DoctorPatientRequest {
+  id: string;
+  doctorId: string;
+  doctorName: string;
+  doctorEmail: string;
+  doctorSpecialization: string;
+  patientId: string;
+  patientName: string;
+  patientEmail: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  message?: string;
+  createdAt: Date;
+  respondedAt?: Date;
+}
+
+// HealthVerse Gamification Types
+export type MetricType = 'steps' | 'hydration' | 'sleep' | 'custom';
+export type ChallengeStatus = 'active' | 'completed';
+
+export interface CommunityChallenge {
+  id: string;
+  createdBy: string; // doctorId
+  title: string;
+  description: string;
+  metricType: MetricType;
+  goalValue: number;
+  startDate: Date;
+  endDate: Date;
+  participants: string[]; // patientIds
+  createdAt: Date;
+  status: ChallengeStatus;
+}
+
+export interface ChallengeProgress {
+  id: string;
+  challengeId: string;
+  patientId: string;
+  progressValue: number;
+  updatedAt: Date;
+  pointsEarned: number;
+  rank: number;
+  completed: boolean;
+}
+
+export interface RewardItem {
+  id: string;
+  name: string;
+  brand: string;
+  imageUrl: string;
+  pointsRequired: number;
+  available: boolean;
+}
+
+export interface ClaimedReward {
+  rewardId: string;
+  dateClaimed: Date;
+  name: string;
+  brand: string;
+}
+
+export interface RewardWallet {
+  id: string;
+  patientId: string;
+  rewardsClaimed: ClaimedReward[];
+  totalPointsSpent: number;
+  currentPoints: number;
+}
+
 // Firebase Firestore type helpers
 export type FirestoreTimestamp = Timestamp | Date;
 

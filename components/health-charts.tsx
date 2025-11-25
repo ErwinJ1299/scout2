@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Reading } from '@/types';
 import { format } from 'date-fns';
+import { Activity } from 'lucide-react';
 
 interface HealthChartsProps {
   readings: Reading[];
@@ -202,10 +203,19 @@ export function HealthCharts({ readings }: HealthChartsProps) {
 
       {readings.length === 0 && (
         <Card className="col-span-2">
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
-              No health data available yet. Start logging your health readings to see charts!
-            </p>
+          <CardContent className="pt-12 pb-12">
+            <div className="text-center">
+              <Activity className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                No Health Data Yet
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Start logging your health readings to see beautiful charts and track your progress over time!
+              </p>
+              <p className="text-sm text-gray-500">
+                📊 Track blood pressure, glucose, heart rate, weight, and daily steps
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}

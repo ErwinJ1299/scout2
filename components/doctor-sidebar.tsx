@@ -7,6 +7,8 @@ import {
   FileText,
   Settings,
   Stethoscope,
+  Sparkles,
+  MessageCircle,
 } from 'lucide-react';
 
 import { NavMain } from '@/components/nav-main';
@@ -46,6 +48,18 @@ export function DoctorSidebar({ ...props }: React.ComponentProps<typeof Sidebar>
       title: 'Patients',
       url: '/doctor/dashboard',
       icon: Users,
+      isActive: false,
+    },
+    {
+      title: 'Messages',
+      url: '/doctor/messages',
+      icon: MessageCircle,
+      isActive: false,
+    },
+    {
+      title: 'HealthVerse',
+      url: '/healthverse',
+      icon: Sparkles,
       isActive: false,
     },
     {
