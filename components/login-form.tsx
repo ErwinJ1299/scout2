@@ -43,12 +43,12 @@ export function LoginForm({
   onToggleMode,
 }: LoginFormProps) {
   return (
-    <div className="w-full max-w-sm p-8 space-y-6 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl">
+    <div className="w-full max-w-sm p-8 space-y-6 bg-white/40 backdrop-blur-2xl rounded-2xl border border-white/60 shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] relative z-10">
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-white">
+        <h2 className="text-3xl font-bold text-gray-900">
           {isSignUp ? 'Create Account' : 'Welcome Back'}
         </h2>
-        <p className="mt-2 text-sm text-gray-300">
+        <p className="mt-2 text-sm text-gray-600">
           {isSignUp ? 'Join our health monitoring platform' : 'Sign in to continue'}
         </p>
       </div>
@@ -62,13 +62,13 @@ export function LoginForm({
                 id="floating_name"
                 value={name}
                 onChange={(e) => onNameChange?.(e.target.value)}
-                className="block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+                className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
                 placeholder=" "
                 required
               />
               <label
                 htmlFor="floating_name"
-                className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                className="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
               >
                 <UserPlus className="inline-block mr-2 -mt-1" size={16} />
                 Full Name
@@ -77,15 +77,15 @@ export function LoginForm({
 
             {/* Role Selection */}
             <div className="space-y-2">
-              <label className="text-sm text-gray-300 font-medium">I am a:</label>
+              <label className="text-sm text-gray-600 font-medium">I am a:</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => onRoleChange?.('patient')}
                   className={`p-3 rounded-lg border-2 transition-all ${
                     role === 'patient'
-                      ? 'border-blue-500 bg-blue-500/20 text-white'
-                      : 'border-white/30 text-gray-300 hover:border-white/50'
+                      ? 'border-blue-500 bg-blue-50 text-blue-600'
+                      : 'border-gray-300 text-gray-600 hover:border-gray-400'
                   }`}
                 >
                   <User className="mx-auto mb-1" size={20} />
@@ -96,8 +96,8 @@ export function LoginForm({
                   onClick={() => onRoleChange?.('doctor')}
                   className={`p-3 rounded-lg border-2 transition-all ${
                     role === 'doctor'
-                      ? 'border-blue-500 bg-blue-500/20 text-white'
-                      : 'border-white/30 text-gray-300 hover:border-white/50'
+                      ? 'border-blue-500 bg-blue-50 text-blue-600'
+                      : 'border-gray-300 text-gray-600 hover:border-gray-400'
                   }`}
                 >
                   <Stethoscope className="mx-auto mb-1" size={20} />
@@ -114,16 +114,16 @@ export function LoginForm({
                   id="floating_specialization"
                   value={specialization}
                   onChange={(e) => onSpecializationChange?.(e.target.value)}
-                  className="block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+                  className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
                   placeholder=" "
                   required
                 />
                 <label
                   htmlFor="floating_specialization"
-                  className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                  className="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 whitespace-nowrap"
                 >
                   <Stethoscope className="inline-block mr-2 -mt-1" size={16} />
-                  Specialization (e.g., Cardiologist, General Physician)
+                  Specialization
                 </label>
               </div>
             )}
@@ -137,13 +137,13 @@ export function LoginForm({
             id="floating_email"
             value={email}
             onChange={(e) => onEmailChange(e.target.value)}
-            className="block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+            className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
             placeholder=" "
             required
           />
           <label
             htmlFor="floating_email"
-            className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+            className="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
           >
             <User className="inline-block mr-2 -mt-1" size={16} />
             Email Address
@@ -156,13 +156,13 @@ export function LoginForm({
             id="floating_password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
-            className="block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+            className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
             placeholder=" "
             required
           />
           <label
             htmlFor="floating_password"
-            className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+            className="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
           >
             <Lock className="inline-block mr-2 -mt-1" size={16} />
             Password
@@ -176,27 +176,27 @@ export function LoginForm({
         )}
 
         <div className="flex items-center justify-between">
-          <a href="#" className="text-xs text-gray-300 hover:text-white transition">Forgot Password?</a>
+          <a href="#" className="text-xs text-gray-500 hover:text-gray-700 transition">Forgot Password?</a>
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="group w-full flex items-center justify-center py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg text-white font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 transition-all duration-300"
+          className="group w-full flex items-center justify-center py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg text-white font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-500 transition-all duration-300"
         >
           {isLoading ? (isSignUp ? 'Creating Account...' : 'Signing In...') : (isSignUp ? 'Create Account' : 'Sign In')}
           {!isLoading && <ArrowRight className="ml-2 h-5 w-5 transform group-hover:translate-x-1 transition-transform" />}
         </button>        {/* Divider */}
         <div className="relative flex py-2 items-center">
-            <div className="flex-grow border-t border-gray-400/30"></div>
-            <span className="flex-shrink mx-4 text-gray-400 text-xs">OR CONTINUE WITH</span>
-            <div className="flex-grow border-t border-gray-400/30"></div>
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="flex-shrink mx-4 text-gray-500 text-xs">OR CONTINUE WITH</span>
+            <div className="flex-grow border-t border-gray-300"></div>
         </div>
 
         {/* Google Login Button */}
         <button
           type="button"
-          className="w-full flex items-center justify-center py-2.5 px-4 bg-white/90 hover:bg-white rounded-lg text-gray-700 font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 transition-all duration-300"
+          className="w-full flex items-center justify-center py-2.5 px-4 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-lg text-gray-700 font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-500 transition-all duration-300"
         >
           <svg className="w-5 h-5 mr-2" viewBox="0 0 48 48">
             <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039L38.802 8.841C34.553 4.806 29.613 2.5 24 2.5C11.983 2.5 2.5 11.983 2.5 24s9.483 21.5 21.5 21.5S45.5 36.017 45.5 24c0-1.538-.135-3.022-.389-4.417z"></path><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12.5 24 12.5c3.059 0 5.842 1.154 7.961 3.039l5.839-5.841C34.553 4.806 29.613 2.5 24 2.5C16.318 2.5 9.642 6.723 6.306 14.691z"></path><path fill="#4CAF50" d="M24 45.5c5.613 0 10.553-2.306 14.802-6.341l-5.839-5.841C30.842 35.846 27.059 38 24 38c-5.039 0-9.345-2.608-11.124-6.481l-6.571 4.819C9.642 41.277 16.318 45.5 24 45.5z"></path><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l5.839 5.841C44.196 35.123 45.5 29.837 45.5 24c0-1.538-.135-3.022-.389-4.417z"></path>
@@ -205,11 +205,11 @@ export function LoginForm({
         </button>
 
       </form>
-       <p className="text-center text-xs text-gray-400">
+       <p className="text-center text-xs text-gray-500">
         {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
         <button 
           onClick={onToggleMode}
-          className="font-semibold text-blue-400 hover:text-blue-300 transition"
+          className="font-semibold text-blue-600 hover:text-blue-700 transition"
         >
           {isSignUp ? 'Sign In' : 'Sign Up'}
         </button>

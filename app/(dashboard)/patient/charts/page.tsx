@@ -109,11 +109,11 @@ export default function ChartsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2 text-gray-900 dark:text-white">
             <TrendingUp className="h-8 w-8 text-teal-600" />
             Health Analytics
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-gray-700 dark:text-gray-200 mt-1">
             Track your health metrics over time
           </p>
         </div>

@@ -322,123 +322,110 @@ export default function ProgressPage() {
               New Goal
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>🎯 Create New Health Goal</DialogTitle>
-              <DialogDescription>
-                Follow these 3 simple steps to set up your health tracking goal
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="sm:max-w-[440px] p-0 gap-0 overflow-hidden rounded-3xl border-0 shadow-2xl bg-white">
+            {/* Header with gradient */}
+            <div className="bg-gradient-to-br from-teal-500 via-teal-400 to-cyan-400 px-6 py-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
+              <DialogHeader className="relative z-10">
+                <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
+                  <Target className="h-6 w-6" />
+                  New Goal
+                </DialogTitle>
+                <DialogDescription className="text-teal-50 mt-1">
+                  Set a target and track your progress
+                </DialogDescription>
+              </DialogHeader>
+            </div>
             
-            <div className="space-y-5 py-4">
-              {/* Step 1: Choose Goal Type */}
-              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-muted">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-primary">1️⃣</span>
-                  <Label htmlFor="goalType" className="text-sm font-semibold">STEP 1: Choose What to Track</Label>
-                </div>
+            <div className="p-6 space-y-5 bg-gray-50/50">
+              {/* Goal Type */}
+              <div className="space-y-2">
+                <Label htmlFor="goalType" className="text-sm font-semibold text-gray-700">Goal Type</Label>
                 <Select
                   value={newGoal.goalType}
                   onValueChange={(value: any) => setNewGoal({ ...newGoal, goalType: value })}
                 >
-                  <SelectTrigger id="goalType" className="w-full">
-                    <SelectValue placeholder="👆 Click here to select a health metric" />
+                  <SelectTrigger id="goalType" className="h-12 rounded-xl border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 bg-white shadow-sm hover:shadow transition-shadow">
+                    <SelectValue placeholder="Select a metric to track" className="text-gray-900" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="steps">👟 Daily Steps - Track your walking activity</SelectItem>
-                    <SelectItem value="glucose">🩸 Blood Glucose - Monitor sugar levels</SelectItem>
-                    <SelectItem value="weight">⚖️ Weight - Track weight management</SelectItem>
-                    <SelectItem value="bp">❤️ Blood Pressure - Monitor BP readings</SelectItem>
-                    <SelectItem value="heartRate">💓 Heart Rate - Track pulse rate</SelectItem>
+                  <SelectContent className="rounded-xl bg-white shadow-lg border-0">
+                    <SelectItem value="steps" className="py-3 text-gray-900 rounded-lg cursor-pointer hover:bg-teal-50">Daily Steps</SelectItem>
+                    <SelectItem value="glucose" className="py-3 text-gray-900 rounded-lg cursor-pointer hover:bg-teal-50">Blood Glucose</SelectItem>
+                    <SelectItem value="weight" className="py-3 text-gray-900 rounded-lg cursor-pointer hover:bg-teal-50">Weight</SelectItem>
+                    <SelectItem value="bp" className="py-3 text-gray-900 rounded-lg cursor-pointer hover:bg-teal-50">Blood Pressure</SelectItem>
+                    <SelectItem value="heartRate" className="py-3 text-gray-900 rounded-lg cursor-pointer hover:bg-teal-50">Heart Rate</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Step 2: Set Target Value */}
-              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-muted">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-primary">2️⃣</span>
-                  <Label htmlFor="targetValue" className="text-sm font-semibold">STEP 2: Enter Your Target Number</Label>
-                </div>
+              {/* Target Value */}
+              <div className="space-y-2">
+                <Label htmlFor="targetValue" className="text-sm font-semibold text-gray-700">Target Value</Label>
                 <Input
                   id="targetValue"
                   type="number"
+                  className="h-12 rounded-xl border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 bg-white shadow-sm hover:shadow transition-shadow"
                   placeholder={
-                    newGoal.goalType === 'steps' ? 'Type: 10000' :
-                    newGoal.goalType === 'glucose' ? 'Type: 100' :
-                    newGoal.goalType === 'weight' ? 'Type: 70' :
-                    newGoal.goalType === 'bp' ? 'Type: 120' :
-                    newGoal.goalType === 'heartRate' ? 'Type: 75' :
-                    'First select a goal type above ☝️'
+                    newGoal.goalType === 'steps' ? '10000 steps' :
+                    newGoal.goalType === 'glucose' ? '100 mg/dL' :
+                    newGoal.goalType === 'weight' ? '70 kg' :
+                    newGoal.goalType === 'bp' ? '120 mmHg' :
+                    newGoal.goalType === 'heartRate' ? '75 bpm' : 'Enter your target'
                   }
                   value={newGoal.targetValue}
                   onChange={(e) => setNewGoal({ ...newGoal, targetValue: e.target.value })}
-                  className="w-full text-base"
                 />
-                <div className="flex items-start gap-2 text-xs bg-blue-50 dark:bg-blue-950/20 p-2.5 rounded border border-blue-200 dark:border-blue-900">
-                  <span className="text-base">💡</span>
-                  <p className="text-blue-900 dark:text-blue-100 leading-relaxed">
-                    {!newGoal.goalType && <span className="font-medium">⚠️ Please select a goal type in Step 1 first</span>}
-                    {newGoal.goalType === 'steps' && <><span className="font-medium">Recommended:</span> 10,000 steps/day is great for health</>}
-                    {newGoal.goalType === 'glucose' && <><span className="font-medium">Healthy range:</span> 100 mg/dL fasting glucose is normal</>}
-                    {newGoal.goalType === 'weight' && <><span className="font-medium">Target weight:</span> Enter your desired weight in kilograms</>}
-                    {newGoal.goalType === 'bp' && <><span className="font-medium">Normal range:</span> 120 mmHg systolic is healthy</>}
-                    {newGoal.goalType === 'heartRate' && <><span className="font-medium">Healthy range:</span> 60-100 bpm is normal resting rate</>}
-                  </p>
-                </div>
               </div>
 
-              {/* Step 3: Optional Details */}
-              <div className="space-y-3 p-3 bg-muted/20 rounded-lg border border-dashed border-muted">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-muted-foreground">3️⃣</span>
-                  <Label className="text-sm font-semibold text-muted-foreground">STEP 3: Optional Details (You can skip this)</Label>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="title" className="text-xs text-muted-foreground">Give your goal a custom name</Label>
-                  <Input
-                    id="title"
-                    type="text"
-                    placeholder="e.g., '30-Day Walking Challenge' or 'Summer Fitness'"
-                    value={newGoal.title}
-                    onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
-                    className="w-full"
-                  />
-                </div>
+              {/* Goal Name (Optional) */}
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-sm font-semibold text-gray-700">
+                  Goal Name <span className="text-gray-400 font-normal text-xs">(optional)</span>
+                </Label>
+                <Input
+                  id="title"
+                  className="h-12 rounded-xl border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 bg-white shadow-sm hover:shadow transition-shadow"
+                  placeholder="e.g., Summer Fitness Challenge"
+                  value={newGoal.title}
+                  onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="deadline" className="text-xs text-muted-foreground">When do you want to achieve this?</Label>
-                  <Input
-                    id="deadline"
-                    type="date"
-                    value={newGoal.deadline}
-                    onChange={(e) => setNewGoal({ ...newGoal, deadline: e.target.value })}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full"
-                  />
-                  <p className="text-xs text-muted-foreground italic">💡 Leave empty for ongoing goals with no end date</p>
-                </div>
+              {/* Deadline (Optional) */}
+              <div className="space-y-2">
+                <Label htmlFor="deadline" className="text-sm font-semibold text-gray-700">
+                  Deadline <span className="text-gray-400 font-normal text-xs">(optional)</span>
+                </Label>
+                <Input
+                  id="deadline"
+                  type="date"
+                  className="h-12 rounded-xl border-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 bg-white shadow-sm hover:shadow transition-shadow"
+                  value={newGoal.deadline}
+                  onChange={(e) => setNewGoal({ ...newGoal, deadline: e.target.value })}
+                  min={new Date().toISOString().split('T')[0]}
+                />
               </div>
             </div>
 
-            <DialogFooter className="gap-3 pt-4 border-t">
+            <div className="flex gap-3 p-6 pt-4 bg-white border-t border-gray-100">
               <Button 
+                type="button"
                 variant="outline" 
                 onClick={() => setDialogOpen(false)}
-                className="flex-1 sm:flex-none border-2 hover:bg-muted"
+                className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 font-medium transition-all"
               >
-                ❌ Cancel
+                Cancel
               </Button>
               <Button 
                 onClick={handleCreateGoal} 
-                disabled={creating || !newGoal.targetValue}
-                className="flex-1 sm:flex-none bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 font-semibold"
+                disabled={creating || !newGoal.targetValue || !newGoal.goalType}
+                className="flex-1 h-12 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
               >
                 {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                ✅ Create Goal
+                Create Goal
               </Button>
-            </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

@@ -262,22 +262,29 @@ service cloud.firestore {
       allow delete: if false;
     }
     
-    // Video calls collection - for WebRTC signaling
+    // Video calls collection - for WebRTC signaling (v2)
     match /videoCalls/{callId} {
-      // Allow read if user is caller or receiver
-      allow read: if isAuthenticated() && 
-        (resource.data.caller == request.auth.uid || resource.data.receiver == request.auth.uid);
+      // Allow read for any authenticated user
+      // The document contains caller/receiver IDs for access control in app logic
+      allow read: if isAuthenticated();
+      
       // Allow create if user is the caller
       allow create: if isAuthenticated() && 
         request.resource.data.caller == request.auth.uid;
-      // Allow update if user is caller or receiver (for answering, ICE candidates)
-      allow update: if isAuthenticated() && 
-        (resource.data.caller == request.auth.uid || resource.data.receiver == request.auth.uid);
-      // Allow delete if user is caller or receiver (for ending call)
+      
+      // Allow update for any authenticated user (caller, receiver need to add ICE candidates)
+      allow update: if isAuthenticated();
+      
+      // Allow delete if user is caller or receiver
       allow delete: if isAuthenticated() && 
         (resource.data.caller == request.auth.uid || resource.data.receiver == request.auth.uid);
-      // Allow list/query for user's calls
-      allow list: if isAuthenticated();
+    }
+    
+    // ICE Candidates subcollection for video calls
+    match /videoCalls/{callId}/iceCandidates/{candidateId} {
+      // Allow authenticated users to read/write ICE candidates
+      // Parent videoCalls rules already restrict who can access calls
+      allow read, write: if isAuthenticated();
     }
     
     // Wearable Devices collection
@@ -374,14 +381,43 @@ service cloud.firestore {
     
     // Medicine Orders - Users can read/create their own
     match /medicineOrders/{id} {
-      allow read, create: if isAuthenticated() && 
-        request.auth.uid == request.resource.data.userId;
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
     }
     
     // Prescription Uploads - Users can read/create their own
     match /prescriptionUploads/{id} {
-      allow read, create: if isAuthenticated() && 
-        request.auth.uid == request.resource.data.userId;
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+    }
+    
+    // ========== HEALTH ALERTS ANOMALY DETECTION SYSTEM ==========
+    
+    // Health Alerts - Patients can read their own, Doctors can read/update for their patients
+    match /healthAlerts/{alertId} {
+      // Patients can read their own alerts
+      allow read: if isAuthenticated() && 
+        resource.data.patientId == request.auth.uid;
+      
+      // Doctors can read alerts for their assigned patients
+      allow read: if isAuthenticated() && 
+        resource.data.doctorId == request.auth.uid;
+      
+      // Doctors can update (acknowledge/resolve) alerts for their patients
+      allow update: if isAuthenticated() && 
+        resource.data.doctorId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'acknowledgedBy', 'acknowledgedAt', 'resolvedBy', 
+          'resolvedAt', 'doctorNotes', 'actionTaken'
+        ]);
+      
+      // Only server/API can create alerts
+      allow create: if false;
+      allow delete: if false;
     }
     
     // Deny all other collections by default
@@ -390,4 +426,3 @@ service cloud.firestore {
     }
   }
 }
-

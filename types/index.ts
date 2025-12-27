@@ -329,3 +329,195 @@ export interface FirestoreReading extends Omit<Reading, 'createdAt'> {
 export interface FirestoreReminder extends Omit<Reminder, 'createdAt'> {
   createdAt: FirestoreTimestamp;
 }
+
+// ==================== MEDICAL SAFETY ANOMALY DETECTION ====================
+
+/**
+ * Severity levels for health anomalies
+ * - NORMAL: All metrics within safe ranges
+ * - WATCH: Metrics showing concerning patterns, notify doctor dashboard
+ * - CRITICAL: Immediate danger, requires SMS/email notification
+ */
+export type AlertSeverity = 'NORMAL' | 'WATCH' | 'CRITICAL';
+
+/**
+ * Status of an alert in the system
+ * - ACTIVE: Alert is new and requires attention
+ * - REVIEWED: Doctor has acknowledged the alert
+ * - RESOLVED: Alert has been addressed/resolved
+ */
+export type AlertStatus = 'ACTIVE' | 'REVIEWED' | 'RESOLVED';
+
+/**
+ * Source of health data for confidence scoring
+ * - manual: Patient-entered data (lower confidence)
+ * - wearable: From connected devices (medium confidence)
+ * - clinical: From medical devices/tests (highest confidence)
+ */
+export type DataSource = 'manual' | 'wearable' | 'clinical' | 'iot';
+
+/**
+ * Types of metrics that can trigger anomalies
+ */
+export type AnomalyMetricType = 
+  | 'heart_rate'
+  | 'blood_pressure_systolic'
+  | 'blood_pressure_diastolic'
+  | 'glucose'
+  | 'oxygen_saturation'
+  | 'temperature'
+  | 'steps'
+  | 'weight';
+
+/**
+ * Rule-based threshold configuration for each metric
+ */
+export interface MetricThreshold {
+  metric: AnomalyMetricType;
+  criticalLow?: number;
+  warningLow?: number;
+  normalLow: number;
+  normalHigh: number;
+  warningHigh?: number;
+  criticalHigh?: number;
+  unit: string;
+}
+
+/**
+ * Single metric reading with metadata for anomaly detection
+ */
+export interface MetricReading {
+  metric: AnomalyMetricType;
+  value: number;
+  timestamp: Date;
+  source: DataSource;
+  deviceId?: string;
+}
+
+/**
+ * Result of trend analysis for a specific metric
+ */
+export interface TrendAnalysis {
+  metric: AnomalyMetricType;
+  direction: 'increasing' | 'decreasing' | 'stable' | 'volatile';
+  slope: number;
+  volatility: number;
+  dataPoints: number;
+  periodDays: number;
+}
+
+/**
+ * Confidence score calculation result
+ */
+export interface ConfidenceScore {
+  overall: number;           // 0-1 scale
+  dataQuality: number;       // Based on source type
+  dataRecency: number;       // Based on timestamp
+  dataConsistency: number;   // Based on reading patterns
+  factors: string[];         // Explanatory factors affecting score
+}
+
+/**
+ * Individual anomaly detected by the engine
+ */
+export interface DetectedAnomaly {
+  metric: AnomalyMetricType;
+  currentValue: number;
+  normalRange: { min: number; max: number };
+  deviation: number;         // How far outside normal range
+  type: 'threshold_breach' | 'trend_anomaly' | 'sudden_change';
+  description: string;
+}
+
+/**
+ * Complete result from the anomaly detection engine
+ */
+export interface AnomalyDetectionResult {
+  patientId: string;
+  timestamp: Date;
+  severity: AlertSeverity;
+  confidence: ConfidenceScore;
+  anomalies: DetectedAnomaly[];
+  trendAnalysis: TrendAnalysis[];
+  rawReadings: MetricReading[];
+  recentHistory: MetricReading[];
+  recommendations: string[];
+  requiresNotification: boolean;
+}
+
+/**
+ * Health alert document stored in Firestore
+ */
+export interface HealthAlert {
+  id: string;
+  patientId: string;
+  patientName?: string;
+  doctorId?: string;
+  
+  // Alert classification
+  severity: AlertSeverity;
+  status: AlertStatus;
+  
+  // Detection details
+  detectionResult: AnomalyDetectionResult;
+  triggerMetric: AnomalyMetricType;
+  triggerValue: number;
+  
+  // Timestamps
+  createdAt: Date;
+  acknowledgedAt?: Date;
+  resolvedAt?: Date;
+  acknowledgedBy?: string;
+  resolvedBy?: string;
+  
+  // Notes
+  doctorNotes?: string;
+  actionTaken?: string;
+  
+  // Notification tracking
+  notificationSent: boolean;
+  notificationType?: 'email' | 'sms' | 'both';
+  notificationSentAt?: Date;
+}
+
+/**
+ * Request payload for acknowledging an alert
+ */
+export interface AcknowledgeAlertRequest {
+  alertId: string;
+  doctorId: string;
+  notes?: string;
+  newStatus: 'REVIEWED' | 'RESOLVED';
+  actionTaken?: string;
+}
+
+/**
+ * SNS notification payload for critical alerts
+ */
+export interface CriticalAlertNotification {
+  alertId: string;
+  patientId: string;
+  patientName: string;
+  severity: AlertSeverity;
+  triggerMetric: AnomalyMetricType;
+  triggerValue: number;
+  normalRange: { min: number; max: number };
+  timestamp: string;
+  recommendations: string[];
+  dashboardUrl: string;
+}
+
+/**
+ * Firestore version of HealthAlert with Timestamps
+ */
+export interface FirestoreHealthAlert extends Omit<HealthAlert, 'createdAt' | 'acknowledgedAt' | 'resolvedAt' | 'notificationSentAt' | 'detectionResult'> {
+  createdAt: FirestoreTimestamp;
+  acknowledgedAt?: FirestoreTimestamp;
+  resolvedAt?: FirestoreTimestamp;
+  notificationSentAt?: FirestoreTimestamp;
+  detectionResult: Omit<AnomalyDetectionResult, 'timestamp' | 'rawReadings' | 'recentHistory'> & {
+    timestamp: FirestoreTimestamp;
+    rawReadings: Array<Omit<MetricReading, 'timestamp'> & { timestamp: FirestoreTimestamp }>;
+    recentHistory: Array<Omit<MetricReading, 'timestamp'> & { timestamp: FirestoreTimestamp }>;
+  };
+}

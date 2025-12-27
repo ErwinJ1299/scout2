@@ -46,7 +46,7 @@ export default function PatientDetailsPage() {
   const params = useParams();
   const patientId = params.patientId as string;
   const { user, userRole, loading: authLoading } = useAuthStore();
-  
+
   const [patient, setPatient] = useState<Patient | null>(null);
   const [readings, setReadings] = useState<Reading[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -73,7 +73,7 @@ export default function PatientDetailsPage() {
     const loadPatientData = async () => {
       try {
         setLoading(true);
-        
+
         // Load patient info
         const patientData = await FirestoreService.getPatient(patientId);
         setPatient(patientData);
@@ -234,7 +234,7 @@ export default function PatientDetailsPage() {
                 </div>
               </div>
             </div>
-            <Button 
+            <Button
               className="bg-gradient-to-r from-blue-600 to-teal-600"
               onClick={() => setIsNoteDialogOpen(true)}
               disabled={!doctor}
@@ -587,15 +587,19 @@ export default function PatientDetailsPage() {
 
           {/* Clinical Notes Tab */}
           <TabsContent value="notes" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-indigo-500" />
-                  Clinical Notes
-                </CardTitle>
-                <CardDescription>Doctor's notes and recommendations</CardDescription>
+            <Card className="overflow-hidden border-2 border-indigo-200">
+              <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 rounded-full">
+                    <FileText className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Clinical Notes</CardTitle>
+                    <CardDescription>Doctor's notes and recommendations</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {clinicalNotes.length === 0 ? (
                   <div className="text-center py-16 text-gray-400">
                     <FileText className="h-16 w-16 mx-auto mb-4 opacity-30" />
@@ -604,54 +608,75 @@ export default function PatientDetailsPage() {
                 ) : (
                   <div className="space-y-4">
                     {clinicalNotes.map((note) => (
-                      <div
-                        key={note.id}
-                        className={`p-6 border rounded-lg ${
-                          note.isPriority ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <p className="font-semibold text-lg">{note.doctorName}</p>
-                            <p className="text-sm text-gray-500">
-                              {format(note.createdAt, 'MMMM d, yyyy • h:mm a')}
-                            </p>
-                          </div>
-                          {note.isPriority && (
-                            <Badge className="bg-red-600">Priority</Badge>
-                          )}
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Note</p>
-                            <p className="text-gray-700 whitespace-pre-wrap">{note.note}</p>
-                          </div>
-                          
-                          {note.diagnosis && (
-                            <div>
-                              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Diagnosis</p>
-                              <p className="text-gray-700">{note.diagnosis}</p>
-                            </div>
-                          )}
-                          
-                          {note.recommendation && (
-                            <div>
-                              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Recommendation</p>
-                              <p className="text-gray-700">{note.recommendation}</p>
-                            </div>
-                          )}
-                          
-                          {note.medications && note.medications.length > 0 && (
-                            <div>
-                              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Medications</p>
-                              <div className="flex flex-wrap gap-2">
-                                {note.medications.map((med, idx) => (
-                                  <Badge key={idx} variant="outline">{med}</Badge>
-                                ))}
+                      <div key={note.id} className="clinical-note-card">
+                        <div className="clinical-note-container">
+                          <div className={`clinical-note-status ${note.isPriority ? 'priority' : ''}`}></div>
+                          <div className="clinical-note-content">
+                            <div className="clinical-note-header">
+                              <div className="flex items-center gap-2">
+                                <span className="clinical-note-doctor">{note.doctorName}</span>
+                                {note.isPriority && (
+                                  <span className="clinical-note-priority-badge">
+                                    Priority
+                                  </span>
+                                )}
                               </div>
+                              <p className="clinical-note-time">
+                                <Calendar className="h-3 w-3" />
+                                {format(note.createdAt, 'MMMM d, yyyy • h:mm a')}
+                              </p>
                             </div>
-                          )}
+
+                            <div className="clinical-note-sections">
+                              {note.diagnosis && (
+                                <div className="clinical-note-section diagnosis">
+                                  <p className="clinical-note-section-label text-blue-700">
+                                    <Activity className="h-3 w-3" />
+                                    Diagnosis
+                                  </p>
+                                  <p className="clinical-note-section-text">{note.diagnosis}</p>
+                                </div>
+                              )}
+
+                              <div className="clinical-note-section notes">
+                                <p className="clinical-note-section-label text-gray-600">
+                                  <FileText className="h-3 w-3" />
+                                  Note
+                                </p>
+                                <p className="clinical-note-section-text">{note.note}</p>
+                              </div>
+
+                              {note.recommendation && (
+                                <div className="clinical-note-section recommendation">
+                                  <p className="clinical-note-section-label text-green-700">
+                                    <Heart className="h-3 w-3" />
+                                    Recommendation
+                                  </p>
+                                  <p className="clinical-note-section-text">{note.recommendation}</p>
+                                </div>
+                              )}
+
+                              {note.medications && note.medications.length > 0 && (
+                                <div className="clinical-note-section medications">
+                                  <p className="clinical-note-section-label text-purple-700">
+                                    💊 Medications
+                                  </p>
+                                  <div className="flex flex-wrap gap-2 mt-1">
+                                    {note.medications.map((med, idx) => (
+                                      <span key={idx} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                                        {med}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="clinical-note-actions">
+                              <button className="clinical-note-btn-primary">Edit Note</button>
+                              <button className="clinical-note-btn-secondary">Delete</button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -794,7 +819,7 @@ export default function PatientDetailsPage() {
               Add clinical observations and recommendations for {patient?.name}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="note">Clinical Note *</Label>

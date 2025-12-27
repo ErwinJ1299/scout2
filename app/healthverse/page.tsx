@@ -91,7 +91,26 @@ export default function HealthVersePage() {
     if (!user) return;
 
     const unsubscribe = FirestoreService.subscribeToChallenges('active', (data) => {
-      setChallenges(data);
+      // Filter out expired challenges (where endDate has passed)
+      const now = new Date();
+      const activeChallenges = data.filter(challenge => {
+        const endDate = new Date(challenge.endDate);
+        return endDate >= now;
+      });
+      
+      // Auto-update expired challenges to 'completed' status
+      data.forEach(async (challenge) => {
+        const endDate = new Date(challenge.endDate);
+        if (endDate < now && challenge.status === 'active') {
+          try {
+            await FirestoreService.updateChallenge(challenge.id, { status: 'completed' });
+          } catch (error) {
+            console.error('Error updating expired challenge:', error);
+          }
+        }
+      });
+      
+      setChallenges(activeChallenges);
     });
 
     return () => unsubscribe();
@@ -469,7 +488,13 @@ export default function HealthVersePage() {
               <div className="space-y-6">
                 {myProgress.map((progress) => {
                   const challenge = challenges.find((c) => c.id === progress.challengeId);
+                  // Skip if challenge not found or is expired
                   if (!challenge) return null;
+                  
+                  // Double-check the challenge hasn't expired
+                  const now = new Date();
+                  const endDate = new Date(challenge.endDate);
+                  if (endDate < now) return null;
 
                   const leaderboardData = challengeLeaderboards[challenge.id];
                   console.log('Rendering challenge:', challenge.id);

@@ -119,8 +119,8 @@ export default function HealthCoachPage() {
       const res = await fetch("/api/healthcoach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          userId, 
+        body: JSON.stringify({
+          userId,
           input,
           patientData,
           recentMessages,
@@ -168,24 +168,24 @@ export default function HealthCoachPage() {
     }
 
     const utter = new SpeechSynthesisUtterance(text);
-    
+
     // Set language based on user selection
     const langCode = language === "hi" ? "hi-IN" : language === "mr" ? "mr-IN" : "en-IN";
     utter.lang = langCode;
-    
+
     // Try to find a voice that matches the language
     const voices = speechSynthesis.getVoices();
-    const preferredVoice = voices.find(voice => voice.lang === langCode) || 
-                          voices.find(voice => voice.lang.startsWith(language)) ||
-                          voices.find(voice => voice.lang.includes("IN"));
-    
+    const preferredVoice = voices.find(voice => voice.lang === langCode) ||
+      voices.find(voice => voice.lang.startsWith(language)) ||
+      voices.find(voice => voice.lang.includes("IN"));
+
     if (preferredVoice) {
       utter.voice = preferredVoice;
     }
-    
+
     utter.rate = 0.9;
     utter.pitch = 1;
-    
+
     utter.onstart = () => setIsSpeaking(true);
     utter.onend = () => setIsSpeaking(false);
     utter.onerror = (err) => {
@@ -218,7 +218,7 @@ export default function HealthCoachPage() {
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    
+
     // Set recognition language based on user selection
     recognition.lang = language === "hi" ? "hi-IN" : language === "mr" ? "mr-IN" : "en-IN";
     recognition.continuous = false;
@@ -246,162 +246,161 @@ export default function HealthCoachPage() {
   }
 
   return (
-    <div className="p-6 min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-      <Card className="max-w-4xl mx-auto p-6 space-y-4 bg-white/5 border-white/10 backdrop-blur-xl rounded-2xl shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <div>
-            <h2 className="text-3xl font-bold text-cyan-400">Your AI Health Coach 🧠</h2>
-            <p className="text-sm text-gray-400 mt-1">
-              Get personalized health guidance and motivation
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger className="w-[140px] bg-slate-800 border-slate-700 text-white">
-                <Languages size={16} className="mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="hi">हिंदी (Hindi)</SelectItem>
-                <SelectItem value="mr">मराठी (Marathi)</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={() => setVoiceEnabled(!voiceEnabled)}
-              variant="outline"
-              size="icon"
-              className={`${
-                voiceEnabled
-                  ? "bg-cyan-600 text-white border-cyan-500"
-                  : "bg-slate-800 text-gray-300 border-slate-700"
-              }`}
-              title={voiceEnabled ? "Voice enabled" : "Voice disabled"}
-            >
-              {voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-            </Button>
-            {isSpeaking && (
-              <Button
-                onClick={stopSpeaking}
-                variant="outline"
-                size="icon"
-                className="bg-red-600 text-white border-red-500 animate-pulse"
-                title="Stop speaking"
-              >
-                <VolumeX size={18} />
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Messages Container */}
-        <div className="h-[60vh] overflow-y-auto space-y-4 p-4 rounded-xl bg-slate-900/50">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-              <div className="w-20 h-20 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                <span className="text-4xl">🧠</span>
+    <div className="min-h-screen p-4 md:p-6">
+      <div className="max-w-3xl mx-auto">
+        {/* Modern Chat Container */}
+        <div className="bg-white/[0.03] backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="px-6 py-4 bg-gradient-to-r from-teal-600/20 to-cyan-600/20 border-b border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-teal-500/25">
+                  <span className="text-2xl">🤖</span>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-white">Health Coach AI</h1>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                    <span className="text-xs text-gray-400">Online • Ready to help</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-semibold text-cyan-300">Start Your Health Journey</h3>
-                <p className="text-gray-400 mt-2 max-w-md">
-                  Ask me about your health metrics, get motivation, or discuss your wellness goals.
-                  I'm here to support you!
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <Button
-                  onClick={() => setInput("How am I doing with my health goals?")}
-                  variant="outline"
-                  size="sm"
-                  className="bg-slate-800 border-slate-700 text-gray-300 hover:bg-slate-700"
+              <div className="flex items-center gap-2">
+                <Select value={language} onValueChange={setLanguage}>
+                  <SelectTrigger className="w-[110px] h-9 bg-slate-800/80 border-slate-600 text-white text-sm rounded-lg hover:bg-slate-700 transition-colors">
+                    <Languages size={14} className="mr-1.5 text-teal-400" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-600 rounded-lg shadow-xl">
+                    <SelectItem value="en" className="text-white hover:bg-slate-700 focus:bg-slate-700 focus:text-white cursor-pointer">🇺🇸 English</SelectItem>
+                    <SelectItem value="hi" className="text-white hover:bg-slate-700 focus:bg-slate-700 focus:text-white cursor-pointer">🇮🇳 हिंदी</SelectItem>
+                    <SelectItem value="mr" className="text-white hover:bg-slate-700 focus:bg-slate-700 focus:text-white cursor-pointer">🇮🇳 मराठी</SelectItem>
+                  </SelectContent>
+                </Select>
+                <button
+                  onClick={() => setVoiceEnabled(!voiceEnabled)}
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${voiceEnabled
+                    ? "bg-teal-500 text-white shadow-lg shadow-teal-500/25"
+                    : "bg-white/5 text-gray-400 hover:bg-white/10"
+                    }`}
+                  title={voiceEnabled ? "Voice enabled" : "Voice disabled"}
                 >
-                  Health progress
-                </Button>
-                <Button
-                  onClick={() => setInput("Give me motivation for today")}
-                  variant="outline"
-                  size="sm"
-                  className="bg-slate-800 border-slate-700 text-gray-300 hover:bg-slate-700"
-                >
-                  Daily motivation
-                </Button>
-                <Button
-                  onClick={() => setInput("Tips to improve my readings")}
-                  variant="outline"
-                  size="sm"
-                  className="bg-slate-800 border-slate-700 text-gray-300 hover:bg-slate-700"
-                >
-                  Get tips
-                </Button>
+                  {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                </button>
               </div>
             </div>
-          ) : (
-            <>
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
-                >
+          </div>
+
+          {/* Messages Area */}
+          <div className="h-[55vh] overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center px-4">
+                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-teal-500/20 to-cyan-500/20 flex items-center justify-center mb-4 border border-teal-500/20">
+                  <span className="text-4xl">💬</span>
+                </div>
+                <h2 className="text-lg font-semibold text-white mb-2">Start a Conversation</h2>
+                <p className="text-sm text-gray-400 mb-6 max-w-sm">
+                  I'm your personal health assistant. Ask me anything about wellness, fitness, or nutrition!
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {[
+                    { text: "Health tips", icon: "💡" },
+                    { text: "Motivation", icon: "🔥" },
+                    { text: "My progress", icon: "📊" },
+                  ].map((item) => (
+                    <button
+                      key={item.text}
+                      onClick={() => setInput(item.text === "Health tips" ? "Give me a health tip" : item.text === "Motivation" ? "Motivate me today" : "How am I doing?")}
+                      className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-gray-300 hover:bg-white/10 hover:border-teal-500/50 transition-all flex items-center gap-2"
+                    >
+                      <span>{item.icon}</span>
+                      {item.text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+                {messages.map((msg, i) => (
                   <div
-                    className={`p-4 rounded-2xl max-w-[75%] shadow-lg ${
-                      msg.role === "user"
-                        ? "bg-gradient-to-br from-cyan-600 to-cyan-700 text-white"
-                        : "bg-gradient-to-br from-slate-800 to-slate-700 text-gray-100 border border-white/10"
-                    }`}
+                    key={i}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    <div className="flex items-start gap-2">
-                      {msg.role === "assistant" && (
-                        <span className="text-xl flex-shrink-0">🧠</span>
-                      )}
+                    {msg.role === "assistant" && (
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center mr-2 flex-shrink-0 mt-1">
+                        <span className="text-sm">🤖</span>
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[80%] px-4 py-3 rounded-2xl ${msg.role === "user"
+                        ? "bg-gradient-to-br from-teal-500 to-cyan-600 text-white rounded-br-md"
+                        : "bg-white/[0.05] text-gray-100 border border-white/10 rounded-bl-md"
+                        }`}
+                    >
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                     </div>
                   </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </>
-          )}
-        </div>
-
-        {/* Input Form */}
-        <form onSubmit={handleSubmit} className="flex gap-2 pt-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask your coach anything..."
-            className="flex-1 bg-slate-800 border-slate-700 text-white placeholder:text-gray-500 focus:border-cyan-500 focus:ring-cyan-500"
-            disabled={loading}
-          />
-          <Button
-            type="button"
-            onClick={handleVoiceInput}
-            variant="outline"
-            size="icon"
-            className="bg-slate-800 border-slate-700 text-gray-300 hover:bg-slate-700 hover:text-cyan-400"
-            disabled={loading}
-            title="Voice input"
-          >
-            <Mic size={18} />
-          </Button>
-          <Button
-            type="submit"
-            className="bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white px-6"
-            disabled={loading || !input.trim()}
-          >
-            {loading ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : (
-              <Send size={18} />
+                ))}
+                <div ref={messagesEndRef} />
+              </>
             )}
-          </Button>
-        </form>
 
-        {/* Disclaimer */}
-        <div className="text-xs text-gray-500 text-center pt-2 border-t border-white/5">
-          💡 This AI coach provides general wellness guidance. Always consult your physician for medical advice.
+            {/* Loading indicator */}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center mr-2 flex-shrink-0">
+                  <span className="text-sm">🤖</span>
+                </div>
+                <div className="bg-white/[0.05] border border-white/10 px-4 py-3 rounded-2xl rounded-bl-md">
+                  <div className="flex items-center gap-1">
+                    <span className="w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                    <span className="w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                    <span className="w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Input Area */}
+          <div className="p-4 border-t border-white/10 bg-white/[0.02]">
+            <form onSubmit={handleSubmit} className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask your coach anything..."
+                  className="w-full bg-white/5 border-white/10 text-white placeholder:text-gray-500 rounded-xl pl-4 pr-12 py-3 focus:border-teal-500/50 focus:ring-teal-500/20"
+                  disabled={loading}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleVoiceInput}
+                className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-teal-400 hover:bg-white/10 transition-all"
+                disabled={loading}
+                title="Voice input"
+              >
+                <Mic size={18} />
+              </button>
+              <button
+                type="submit"
+                disabled={loading || !input.trim()}
+                className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-white shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Send size={18} />
+                )}
+              </button>
+            </form>
+            <p className="text-[11px] text-gray-500 text-center mt-3">
+              AI provides general guidance only • Always consult your doctor for medical advice
+            </p>
+          </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

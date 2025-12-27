@@ -152,6 +152,10 @@ export class FirestoreService {
 
   // ==================== READINGS ====================
   
+  /**
+   * Add a new health reading and trigger anomaly detection
+   * The anomaly detection runs asynchronously to not block the UI
+   */
   static async addReading(reading: Reading) {
     const readingData: any = {
       ...reading,
@@ -163,7 +167,46 @@ export class FirestoreService {
       id: docRef.id,
     };
     await setDoc(docRef, readingWithId);
+    
+    // Trigger anomaly detection asynchronously (fire and forget)
+    // This ensures the UI isn't blocked waiting for anomaly analysis
+    FirestoreService.triggerAnomalyDetection(reading.patientId, docRef.id).catch(error => {
+      console.error('[FirestoreService] Anomaly detection failed:', error);
+      // Don't throw - reading was saved successfully
+    });
   }
+  
+  /**
+   * Trigger anomaly detection for a patient's reading
+   * Called automatically after adding a reading, or manually for batch processing
+   */
+  static async triggerAnomalyDetection(patientId: string, readingId?: string): Promise<void> {
+    try {
+      const response = await fetch('/api/anomaly-detection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          patientId,
+          readingId,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        console.warn('[FirestoreService] Anomaly detection warning:', error);
+      } else {
+        const result = await response.json();
+        console.log('[FirestoreService] Anomaly detection result:', result.severity, 
+          result.anomaliesDetected > 0 ? `(${result.anomaliesDetected} anomalies)` : '(no anomalies)');
+      }
+    } catch (error) {
+      // Log but don't throw - anomaly detection is supplementary
+      console.error('[FirestoreService] Anomaly detection error:', error);
+    }
+  }
+
 
   static async getReadings(patientId: string, limitCount = 30): Promise<Reading[]> {
     const q = query(

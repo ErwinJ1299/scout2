@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Area, AreaChart, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { useAuthStore } from '@/lib/store/auth.store';
 import { useToast } from '@/hooks/use-toast';
 import { Activity, TrendingUp, TrendingDown, AlertTriangle, RefreshCw } from 'lucide-react';
+import { HealthChart } from '@/components/charts/HealthChart';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 interface HealthMetricHistory {
   date: string;
@@ -49,6 +50,29 @@ export default function HealthPredictionPage() {
   const [historicalData, setHistoricalData] = useState<HealthMetricHistory[]>([]);
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const heartRateData = useMemo(() => (
+    historicalData
+      .filter((item) => item.heart_rate)
+      .map((item) => ({
+        date: formatDate(item.date),
+        value: item.heart_rate,
+      }))
+  ), [historicalData]);
+
+  const stepsData = useMemo(() => (
+    historicalData
+      .filter((item) => item.steps)
+      .map((item) => ({
+        date: formatDate(item.date),
+        value: item.steps,
+      }))
+  ), [historicalData]);
 
   useEffect(() => {
     setMounted(true);
@@ -144,19 +168,34 @@ export default function HealthPredictionPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50">
+        {/* Decorative blurred shapes */}
+        <div className="absolute top-20 left-10 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
+        <div className="absolute top-40 right-20 w-64 h-64 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-40 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-4000"></div>
+        <div className="absolute bottom-40 right-40 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
+        
+        <div className="container mx-auto p-6 relative z-10">
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
             <p className="text-muted-foreground">Loading health data...</p>
           </div>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Decorative blurred shapes */}
+      <div className="absolute top-20 left-10 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
+      <div className="absolute top-40 right-20 w-64 h-64 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-2000"></div>
+      <div className="absolute -bottom-8 left-40 w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-4000"></div>
+      <div className="absolute bottom-40 right-40 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
+      
+    <div className="container mx-auto p-6 space-y-6 relative z-10">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -202,57 +241,25 @@ export default function HealthPredictionPage() {
         </Card>
       )}
 
-      {/* Historical Data Charts */}
+      {/* Historical Data Charts (aligned with Charts section) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Heart Rate History */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-red-500" />
-              Heart Rate History
-            </CardTitle>
-            <CardDescription>Last 30 days average heart rate (bpm)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={historicalData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="heart_rate" 
-                  stroke="#ef4444" 
-                  strokeWidth={2}
-                  name="Heart Rate (bpm)"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <HealthChart
+          type="line"
+          title="Heart Rate History"
+          subtitle="Last 30 days average heart rate (bpm)"
+          dataset={heartRateData}
+          unit="bpm"
+          color={{ start: '#ef4444', end: '#f97316' }}
+        />
 
-        {/* Steps History */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-blue-500" />
-              Activity Level
-            </CardTitle>
-            <CardDescription>Daily steps count</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={historicalData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="steps" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Steps" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <HealthChart
+          type="bar"
+          title="Activity Level"
+          subtitle="Daily steps count"
+          dataset={stepsData}
+          unit="steps"
+          color={{ start: '#3b82f6', end: '#2563eb' }}
+        />
       </div>
 
       {/* Prediction Results */}
@@ -401,6 +408,7 @@ export default function HealthPredictionPage() {
           </Card>
         </>
       )}
+    </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { doc, setDoc, updateDoc, onSnapshot, Timestamp, deleteDoc, getDoc } from
 
 export interface WebRTCConfig {
   iceServers: RTCIceServer[];
+  iceCandidatePoolSize?: number;
 }
 
 const DEFAULT_CONFIG: WebRTCConfig = {
@@ -12,47 +13,85 @@ const DEFAULT_CONFIG: WebRTCConfig = {
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun3.l.google.com:19302' },
     { urls: 'stun:stun4.l.google.com:19302' },
-    // Free TURN server for testing (consider getting your own for production)
-    {
-      urls: 'turn:openrelay.metered.ca:80',
-      username: 'openrelayproject',
-      credential: 'openrelayproject',
-    },
-    {
-      urls: 'turn:openrelay.metered.ca:443',
-      username: 'openrelayproject',
-      credential: 'openrelayproject',
-    },
   ],
+  iceCandidatePoolSize: 10,
 };
 
 export class WebRTCService {
   private peerConnection: RTCPeerConnection | null = null;
   private localStream: MediaStream | null = null;
+  private remoteStream: MediaStream | null = null;
   private callId: string | null = null;
   private unsubscribe: (() => void) | null = null;
 
   constructor(private config: WebRTCConfig = DEFAULT_CONFIG) {}
 
-  // Initialize local media stream
+  // Check available media devices
+  async checkAvailableDevices(): Promise<{ hasVideo: boolean; hasAudio: boolean }> {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const hasVideo = devices.some(device => device.kind === 'videoinput');
+      const hasAudio = devices.some(device => device.kind === 'audioinput');
+      console.log('📱 Available devices - Video:', hasVideo, 'Audio:', hasAudio);
+      return { hasVideo, hasAudio };
+    } catch (error) {
+      console.error('Error enumerating devices:', error);
+      return { hasVideo: false, hasAudio: false };
+    }
+  }
+
+  // Initialize local media stream with fallback options
   async getLocalStream(video: boolean = true, audio: boolean = true): Promise<MediaStream> {
     try {
       console.log('🎥 Requesting media access...');
       
+      // First check what devices are available
+      const { hasVideo, hasAudio } = await this.checkAvailableDevices();
+      
+      // Adjust requested media based on available devices
+      const requestVideo = video && hasVideo;
+      const requestAudio = audio && hasAudio;
+      
+      if (!requestVideo && !requestAudio) {
+        console.warn('⚠️ No media devices available, creating empty stream');
+        // Create an empty stream - user can still view remote stream
+        this.localStream = new MediaStream();
+        return this.localStream;
+      }
+      
+      console.log(`📹 Requesting - Video: ${requestVideo}, Audio: ${requestAudio}`);
+      
       this.localStream = await navigator.mediaDevices.getUserMedia({
-        video: video ? { width: 1280, height: 720 } : false,
-        audio: audio,
+        video: requestVideo ? { width: 1280, height: 720 } : false,
+        audio: requestAudio,
       });
       console.log('✅ Media access granted. Stream tracks:', 
         this.localStream.getTracks().map(t => `${t.kind}: ${t.enabled}`).join(', '));
       return this.localStream;
     } catch (error: any) {
       console.error('❌ Error accessing media devices:', error);
-      if (error.name === 'NotAllowedError') {
-        throw new Error('Camera/microphone access denied. Please grant permissions in your browser settings.');
-      } else if (error.name === 'NotFoundError') {
-        throw new Error('No camera or microphone found. Please connect a device.');
-      } else if (error.name === 'NotReadableError') {
+      
+      // Try fallback options
+      if (error.name === 'NotFoundError' || error.name === 'NotAllowedError') {
+        // Try audio only if video failed
+        if (video && audio) {
+          console.log('🔄 Falling back to audio only...');
+          try {
+            this.localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+            console.log('✅ Audio-only stream obtained');
+            return this.localStream;
+          } catch (audioError) {
+            console.log('🔄 Audio also failed, creating empty stream...');
+          }
+        }
+        
+        // Create empty stream as last resort
+        console.warn('⚠️ Creating empty stream - user can still view remote video');
+        this.localStream = new MediaStream();
+        return this.localStream;
+      }
+      
+      if (error.name === 'NotReadableError') {
         throw new Error('Camera/microphone is already in use by another application.');
       } else if (error.name === 'TypeError') {
         throw new Error('Media devices not available. Ensure you are using HTTPS or localhost.');
@@ -87,28 +126,65 @@ export class WebRTCService {
     // Collect ICE candidates - they will be added dynamically
     this.peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log('🧊 Caller: New ICE candidate', event.candidate.type);
+        const candidateType = event.candidate.type;
+        const protocol = event.candidate.protocol;
+        console.log(`🧊 Caller: New ICE candidate ${candidateType} (${protocol})`, event.candidate.address);
         this.addIceCandidate(callId, event.candidate.toJSON(), 'caller');
       } else {
         console.log('✅ Caller: ICE candidate gathering complete');
       }
     };
 
+    // Log ICE gathering state
+    this.peerConnection.onicegatheringstatechange = () => {
+      console.log('🧊 Caller ICE gathering state:', this.peerConnection?.iceGatheringState);
+    };
+
     // Handle remote stream
     this.peerConnection.ontrack = (event) => {
-      console.log('🎥 Caller: Remote track received', event.track.kind);
-      const remoteStream = event.streams[0];
-      onRemoteStream(remoteStream);
+      console.log('🎥 Caller: Remote track received', event.track.kind, 'enabled:', event.track.enabled, 'readyState:', event.track.readyState);
+      console.log('🎥 Caller: event.streams:', event.streams.length);
+      
+      if (event.streams && event.streams[0]) {
+        console.log('🎥 Caller: Using event.streams[0] with tracks:', event.streams[0].getTracks().map(t => t.kind).join(', '));
+        onRemoteStream(event.streams[0]);
+      } else {
+        // Fallback: create stream manually
+        if (!this.remoteStream) {
+          this.remoteStream = new MediaStream();
+        }
+        this.remoteStream.addTrack(event.track);
+        console.log('🎥 Caller: Using manual stream with tracks:', this.remoteStream.getTracks().map(t => t.kind).join(', '));
+        onRemoteStream(this.remoteStream);
+      }
     };
 
     // Monitor connection state
     this.peerConnection.onconnectionstatechange = () => {
-      console.log('🔗 Caller connection state:', this.peerConnection?.connectionState);
+      const state = this.peerConnection?.connectionState;
+      console.log('🔗 Caller connection state:', state);
+      if (state === 'connected') {
+        console.log('✅ Caller: Peer connection established!');
+      } else if (state === 'failed') {
+        // Don't restart immediately - give more time for ICE
+        console.warn('⚠️ Caller: Peer connection failed state - waiting for recovery');
+      }
     };
 
     this.peerConnection.oniceconnectionstatechange = () => {
-      console.log('🧊 Caller ICE connection state:', this.peerConnection?.iceConnectionState);
+      const state = this.peerConnection?.iceConnectionState;
+      console.log('🧊 Caller ICE connection state:', state);
+      if (state === 'connected' || state === 'completed') {
+        console.log('✅ Caller: ICE connected!');
+      } else if (state === 'failed') {
+        console.error('❌ Caller: ICE connection failed - trying ICE restart');
+        this.peerConnection?.restartIce();
+      }
     };
+
+    // **CRITICAL: Start listening for receiver ICE candidates BEFORE creating offer**
+    // This ensures we catch all candidates as they're added to Firestore
+    this.listenForIceCandidates(callId, 'receiver');
 
     // Create offer
     const offer = await this.peerConnection.createOffer();
@@ -164,27 +240,58 @@ export class WebRTCService {
     // Collect ICE candidates - they will be added dynamically
     this.peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log('🧊 Receiver: New ICE candidate', event.candidate.type);
+        const candidateType = event.candidate.type;
+        const protocol = event.candidate.protocol;
+        console.log(`🧊 Receiver: New ICE candidate ${candidateType} (${protocol})`, event.candidate.address);
         this.addIceCandidate(callId, event.candidate.toJSON(), 'receiver');
       } else {
         console.log('✅ Receiver: ICE candidate gathering complete');
       }
     };
 
+    // Log ICE gathering state
+    this.peerConnection.onicegatheringstatechange = () => {
+      console.log('🧊 Receiver ICE gathering state:', this.peerConnection?.iceGatheringState);
+    };
+
     // Handle remote stream
     this.peerConnection.ontrack = (event) => {
-      console.log('🎥 Receiver: Remote track received', event.track.kind);
-      const remoteStream = event.streams[0];
-      onRemoteStream(remoteStream);
+      console.log('🎥 Receiver: Remote track received', event.track.kind, 'enabled:', event.track.enabled, 'readyState:', event.track.readyState);
+      console.log('🎥 Receiver: event.streams:', event.streams.length);
+      
+      if (event.streams && event.streams[0]) {
+        console.log('🎥 Receiver: Using event.streams[0] with tracks:', event.streams[0].getTracks().map(t => t.kind).join(', '));
+        onRemoteStream(event.streams[0]);
+      } else {
+        // Fallback: create stream manually
+        if (!this.remoteStream) {
+          this.remoteStream = new MediaStream();
+        }
+        this.remoteStream.addTrack(event.track);
+        console.log('🎥 Receiver: Using manual stream with tracks:', this.remoteStream.getTracks().map(t => t.kind).join(', '));
+        onRemoteStream(this.remoteStream);
+      }
     };
 
     // Monitor connection state
     this.peerConnection.onconnectionstatechange = () => {
-      console.log('🔗 Receiver connection state:', this.peerConnection?.connectionState);
+      const state = this.peerConnection?.connectionState;
+      console.log('🔗 Receiver connection state:', state);
+      if (state === 'connected') {
+        console.log('✅ Receiver: Peer connection established!');
+      } else if (state === 'failed') {
+        console.error('❌ Receiver: Peer connection failed - trying ICE restart');
+        this.peerConnection?.restartIce();
+      }
     };
 
     this.peerConnection.oniceconnectionstatechange = () => {
-      console.log('🧊 Receiver ICE connection state:', this.peerConnection?.iceConnectionState);
+      const state = this.peerConnection?.iceConnectionState;
+      console.log('🧊 Receiver ICE connection state:', state);
+      if (state === 'failed') {
+        console.error('❌ Receiver: ICE connection failed - trying ICE restart');
+        this.peerConnection?.restartIce();
+      }
     };
 
     // Set remote description (offer)
@@ -225,7 +332,7 @@ export class WebRTCService {
         await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
         console.log('✅ Caller: Remote description set');
         
-        // Add receiver's ICE candidates
+        // Add receiver's ICE candidates that arrived before answer
         if (data.receiverIceCandidates && data.receiverIceCandidates.length > 0) {
           console.log(`🧊 Caller: Adding ${data.receiverIceCandidates.length} ICE candidates from receiver`);
           for (const candidate of data.receiverIceCandidates) {
@@ -233,8 +340,7 @@ export class WebRTCService {
           }
         }
 
-        // Listen for new ICE candidates from receiver
-        this.listenForIceCandidates(callId, 'receiver');
+        // Note: listenForIceCandidates already started in startCall() before creating offer
       }
     });
   }
@@ -250,9 +356,25 @@ export class WebRTCService {
       
       if (candidates.length > lastCount) {
         const newCount = candidates.length - lastCount;
-        console.log(`🧊 Adding ${newCount} new ICE candidates from ${from}`);
+        console.log(`🧊 Adding ${newCount} new ICE candidates from ${from} (total: ${candidates.length})`);
+        
+        // Add all new candidates
         for (let i = lastCount; i < candidates.length; i++) {
-          await this.peerConnection?.addIceCandidate(new RTCIceCandidate(candidates[i]));
+          try {
+            if (this.peerConnection?.remoteDescription) {
+              await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidates[i]));
+            } else {
+              console.log('⚠️ Queuing ICE candidate - no remote description yet');
+              // Queue it to add after remote description is set
+              setTimeout(async () => {
+                if (this.peerConnection?.remoteDescription) {
+                  await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidates[i]));
+                }
+              }, 100);
+            }
+          } catch (err) {
+            console.error('Failed to add ICE candidate:', err);
+          }
         }
         lastCount = candidates.length;
       }
@@ -318,6 +440,12 @@ export class WebRTCService {
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => track.stop());
       this.localStream = null;
+    }
+    
+    // Clear remote stream
+    if (this.remoteStream) {
+      this.remoteStream.getTracks().forEach((track) => track.stop());
+      this.remoteStream = null;
     }
 
     // Close peer connection

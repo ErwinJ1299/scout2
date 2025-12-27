@@ -5,20 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Video, Phone, Loader2 } from "lucide-react";
+import { Send, Video, Loader2 } from "lucide-react";
 import { db } from "@/lib/firebase";
 import {
   collection,
   addDoc,
   query,
-  where,
   orderBy,
   onSnapshot,
   serverTimestamp,
   Timestamp,
   updateDoc,
   doc,
-  getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -51,12 +50,27 @@ export function ChatInterface({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [actualConversationId, setActualConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // Initialize or get conversation ID
+  useEffect(() => {
+    if (!conversationId) return;
+
+    // If conversationId starts with "pending_", we need to create the conversation
+    if (conversationId.startsWith("pending_")) {
+      setActualConversationId(null);
+    } else {
+      setActualConversationId(conversationId);
+    }
+  }, [conversationId]);
+
   // Subscribe to messages
   useEffect(() => {
-    const messagesRef = collection(db, `conversations/${conversationId}/messages`);
+    if (!actualConversationId) return;
+
+    const messagesRef = collection(db, `conversations/${actualConversationId}/messages`);
     const q = query(messagesRef, orderBy("timestamp", "asc"));
 
     const unsub = onSnapshot(q, (snapshot) => {
@@ -70,15 +84,26 @@ export function ChatInterface({
       snapshot.docs.forEach(async (docSnapshot) => {
         const msg = docSnapshot.data();
         if (msg.senderId !== currentUserId && !msg.read) {
-          await updateDoc(doc(db, `conversations/${conversationId}/messages`, docSnapshot.id), {
-            read: true,
-          });
+          try {
+            await updateDoc(doc(db, `conversations/${actualConversationId}/messages`, docSnapshot.id), {
+              read: true,
+            });
+          } catch (err) {
+            console.error("Error marking message as read:", err);
+          }
         }
+      });
+    }, (error) => {
+      console.error("Error listening to messages:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load messages. Please refresh the page.",
+        variant: "destructive",
       });
     });
 
     return () => unsub();
-  }, [conversationId, currentUserId]);
+  }, [actualConversationId, currentUserId, toast]);
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -91,8 +116,26 @@ export function ChatInterface({
 
     setLoading(true);
     try {
+      let convId = actualConversationId;
+
+      // If no conversation exists yet, create it
+      if (!convId) {
+        const newConvRef = doc(collection(db, "conversations"));
+        await setDoc(newConvRef, {
+          participants: [currentUserId, otherUserId],
+          lastMessage: "",
+          lastMessageTime: serverTimestamp(),
+          unreadCount: {
+            [currentUserId]: 0,
+            [otherUserId]: 0,
+          },
+        });
+        convId = newConvRef.id;
+        setActualConversationId(convId);
+      }
+
       // Add message to subcollection
-      await addDoc(collection(db, `conversations/${conversationId}/messages`), {
+      await addDoc(collection(db, `conversations/${convId}/messages`), {
         senderId: currentUserId,
         text: input,
         type: "text",
@@ -101,7 +144,7 @@ export function ChatInterface({
       });
 
       // Update conversation lastMessage
-      await updateDoc(doc(db, "conversations", conversationId), {
+      await updateDoc(doc(db, "conversations", convId), {
         lastMessage: input,
         lastMessageTime: serverTimestamp(),
       });
@@ -189,7 +232,7 @@ export function ChatInterface({
               >
                 <p className="break-words">{message.text}</p>
                 <p className="text-xs opacity-70 mt-1">
-                  {message.timestamp?.toDate().toLocaleTimeString()}
+                  {message.timestamp ? message.timestamp.toDate().toLocaleTimeString() : "Sending..."}
                 </p>
               </div>
             </div>

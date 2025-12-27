@@ -67,14 +67,6 @@ export default function AddReadingPage() {
       <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={() => router.back()}
-            className="shrink-0"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Log Health Data</h1>
             <p className="text-gray-600 mt-1">Track your vital signs and daily metrics</p>
@@ -287,7 +279,7 @@ export default function AddReadingPage() {
               type="button" 
               variant="outline" 
               onClick={() => router.back()} 
-              className="flex-1 sm:flex-initial sm:w-32"
+              className="flex-1 sm:flex-initial sm:w-32 h-11 rounded-lg border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 shadow-sm"
             >
               Cancel
             </Button>

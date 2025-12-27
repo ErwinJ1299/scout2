@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { ChatInterface } from "@/components/chat-interface";
 import { VideoCallModal } from "@/components/video-call-modal";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, VideoIcon, User } from "lucide-react";
+import { MessageCircle, VideoIcon, ChevronLeft } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { useAuthStore } from "@/lib/store/auth.store";
@@ -41,8 +41,65 @@ export default function DoctorMessagesPage() {
       return;
     }
 
-    loadConversations();
-  }, [userId]);
+    // Listen for conversations where doctor is a participant
+    console.log("Setting up conversations listener for doctor:", userId);
+    const conversationsRef = collection(db, "conversations");
+    const q = query(conversationsRef, where("participants", "array-contains", userId));
+
+    const unsub = onSnapshot(q, async (snapshot) => {
+      console.log("Received", snapshot.docs.length, "conversations");
+      const convos: Conversation[] = [];
+      const seenPatients = new Set<string>();
+
+      for (const docSnapshot of snapshot.docs) {
+        const data = docSnapshot.data();
+        const patientId = data.participants.find((id: string) => id !== userId);
+
+        // Only include if there's a patient and we haven't seen them
+        if (patientId && !seenPatients.has(patientId)) {
+          seenPatients.add(patientId);
+
+          // Get patient info
+          try {
+            const patientDoc = await getDoc(doc(db, "patients", patientId));
+            const patientName = patientDoc.exists() ? patientDoc.data().name : "Patient";
+
+            convos.push({
+              id: docSnapshot.id,
+              patientId,
+              patientName,
+              lastMessage: data.lastMessage || "",
+              lastMessageTime: data.lastMessageTime,
+              unreadCount: data.unreadCount?.[userId] || 0,
+            });
+          } catch (err) {
+            console.error("Error fetching patient data:", err);
+          }
+        }
+      }
+
+      // Sort by last message time
+      convos.sort((a, b) => {
+        const timeA = a.lastMessageTime?.toMillis() || 0;
+        const timeB = b.lastMessageTime?.toMillis() || 0;
+        return timeB - timeA;
+      });
+
+      console.log("Processed conversations:", convos.length);
+      setConversations(convos);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error listening to conversations:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load conversations. Please try again.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    });
+
+    return () => unsub();
+  }, [userId, router, toast]);
 
   // Listen for incoming calls
   useEffect(() => {
@@ -84,58 +141,7 @@ export default function DoctorMessagesPage() {
     });
 
     return () => unsub();
-  }, [userId, conversations, incomingCall]);
-
-  async function loadConversations() {
-    try {
-      const conversationsRef = collection(db, "conversations");
-      const q = query(conversationsRef, where("participants", "array-contains", userId));
-
-      const unsub = onSnapshot(q, async (snapshot) => {
-        const convos: Conversation[] = [];
-
-        for (const docSnapshot of snapshot.docs) {
-          const data = docSnapshot.data();
-          const patientId = data.participants.find((id: string) => id !== userId);
-
-          if (patientId) {
-            // Get patient info
-            const patientDoc = await getDoc(doc(db, "patients", patientId));
-            const patientName = patientDoc.exists() ? patientDoc.data().name : "Patient";
-
-            convos.push({
-              id: docSnapshot.id,
-              patientId,
-              patientName,
-              lastMessage: data.lastMessage || "",
-              lastMessageTime: data.lastMessageTime,
-              unreadCount: data.unreadCount?.[userId] || 0,
-            });
-          }
-        }
-
-        // Sort by last message time
-        convos.sort((a, b) => {
-          const timeA = a.lastMessageTime?.toMillis() || 0;
-          const timeB = b.lastMessageTime?.toMillis() || 0;
-          return timeB - timeA;
-        });
-
-        setConversations(convos);
-        setLoading(false);
-      });
-
-      return () => unsub();
-    } catch (error) {
-      console.error("Error loading conversations:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load conversations. Please try again.",
-        variant: "destructive",
-      });
-      setLoading(false);
-    }
-  }
+  }, [userId, conversations, incomingCall, toast]);
 
   function handleVideoCall() {
     if (!selectedConversation) return;
@@ -180,103 +186,130 @@ export default function DoctorMessagesPage() {
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-950 to-slate-900">
         <div className="text-center">
           <MessageCircle className="h-12 w-12 text-cyan-500 animate-pulse mx-auto mb-4" />
-          <p className="text-gray-400">Loading conversations...</p>
+          <p className="text-gray-400">Loading messages...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="h-screen bg-gradient-to-br from-slate-950 to-slate-900 p-4">
-      <div className="max-w-7xl mx-auto h-full flex flex-col">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-white flex items-center">
-            <MessageCircle className="mr-2 text-cyan-500" />
-            Patient Messages
-          </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Communicate with your patients
-          </p>
-        </div>
+  // No conversations - show empty state
+  if (conversations.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-950 to-slate-900">
+        <Card className="max-w-md bg-slate-900 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <MessageCircle className="mr-2" />
+              Messages
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-400">
+              No messages yet. When patients message you, their conversations will appear here.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-        <div className="flex-1 grid grid-cols-12 gap-4 h-[calc(100vh-120px)]">
-          {/* Conversations List */}
-          <Card className="col-span-4 bg-slate-900 border-slate-700 overflow-hidden flex flex-col">
-            <CardContent className="p-0 flex-1 overflow-y-auto">
-              {conversations.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-center p-6">
-                  <div>
-                    <User className="h-12 w-12 text-gray-500 mx-auto mb-3" />
-                    <p className="text-gray-400">No conversations yet</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Patients assigned to you will appear here
+  // Show conversation list if no conversation selected, otherwise show chat
+  if (!selectedConversation) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-slate-950 to-slate-900 p-4">
+        <div className="max-w-6xl mx-auto h-full">
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold text-white flex items-center">
+              <MessageCircle className="mr-2 text-cyan-500" />
+              Messages
+            </h1>
+            <p className="text-gray-400 text-sm mt-1">
+              Chat with your patients
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            {conversations.map((conv) => (
+              <button
+                key={conv.id}
+                onClick={() => setSelectedConversation(conv)}
+                className="w-full p-4 bg-slate-900 border border-slate-700 rounded-lg text-left hover:bg-slate-800 transition-colors"
+              >
+                <div className="flex items-center space-x-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback className="bg-purple-600 text-white font-semibold">
+                      {conv.patientName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-white truncate">
+                        {conv.patientName}
+                      </p>
+                      {conv.unreadCount > 0 && (
+                        <Badge className="bg-cyan-500 text-white">
+                          {conv.unreadCount}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-400 truncate">
+                      {conv.lastMessage || "No messages yet"}
                     </p>
+                    {conv.lastMessageTime && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(conv.lastMessageTime.toMillis()).toLocaleString([], {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div className="divide-y divide-slate-700">
-                  {conversations.map((conv) => (
-                    <button
-                      key={conv.id}
-                      onClick={() => setSelectedConversation(conv)}
-                      className={`w-full p-4 text-left hover:bg-slate-800 transition-colors ${
-                        selectedConversation?.id === conv.id ? "bg-slate-800" : ""
-                      }`}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <Avatar>
-                          <AvatarFallback className="bg-purple-600">
-                            {conv.patientName.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="font-semibold text-white truncate">
-                              {conv.patientName}
-                            </p>
-                            {conv.unreadCount > 0 && (
-                              <Badge variant="default" className="bg-cyan-600">
-                                {conv.unreadCount}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-400 truncate">
-                            {conv.lastMessage || "No messages yet"}
-                          </p>
-                          {conv.lastMessageTime && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              {new Date(conv.lastMessageTime.toMillis()).toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Chat Area */}
-          <div className="col-span-8">
-            {selectedConversation ? (
-              <ChatInterface
-                conversationId={selectedConversation.id}
-                currentUserId={userId}
-                otherUserId={selectedConversation.patientId}
-                otherUserName={selectedConversation.patientName}
-                otherUserRole="patient"
-                onVideoCall={handleVideoCall}
-              />
-            ) : (
-              <Card className="h-full bg-slate-900 border-slate-700 flex items-center justify-center">
-                <CardContent className="text-center">
-                  <MessageCircle className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400">Select a conversation to start messaging</p>
-                </CardContent>
-              </Card>
-            )}
+              </button>
+            ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show chat interface with selected conversation
+  return (
+    <div className="h-screen bg-gradient-to-br from-slate-950 to-slate-900 p-4">
+      <div className="max-w-6xl mx-auto h-full">
+        <div className="mb-4">
+          <div className="flex items-center">
+            {conversations.length > 1 && (
+              <button
+                onClick={() => setSelectedConversation(null)}
+                className="mr-3 p-2 hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5 text-gray-400" />
+              </button>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-white flex items-center">
+                <MessageCircle className="mr-2 text-cyan-500" />
+                Messages
+              </h1>
+              <p className="text-gray-400 text-sm mt-1">
+                Chat with {selectedConversation.patientName}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-[calc(100vh-120px)]">
+          <ChatInterface
+            conversationId={selectedConversation.id}
+            currentUserId={userId}
+            otherUserId={selectedConversation.patientId}
+            otherUserName={selectedConversation.patientName}
+            otherUserRole="patient"
+            onVideoCall={handleVideoCall}
+          />
         </div>
 
         {/* Video Call Modal */}

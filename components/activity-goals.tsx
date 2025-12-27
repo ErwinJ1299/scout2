@@ -162,50 +162,55 @@ export function ActivityGoals() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Daily Activity Goals
-              </CardTitle>
-              <CardDescription>Set and track your daily health goals</CardDescription>
-            </div>
-            <Button
-              variant={editing ? 'default' : 'outline'}
-              onClick={() => editing ? saveGoals() : setEditing(true)}
-            >
-              {editing ? 'Save Goals' : 'Edit Goals'}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
+    <div className="space-y-4">
+      {/* Daily Activity Goals */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Daily Activity Goals</h2>
+          <button
+            onClick={() => editing ? saveGoals() : setEditing(true)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${editing
+              ? 'bg-teal-600 text-white hover:bg-teal-700'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`}
+          >
+            {editing ? 'Save' : 'Edit'}
+          </button>
+        </div>
+
+        {/* Goals List */}
+        <div className="divide-y divide-gray-100 dark:divide-gray-800">
           {/* Steps Goal */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Steps Goal</Label>
-              {!editing && (
-                <span className="text-sm font-medium">
-                  {progress.steps.toLocaleString()} / {goals.steps.toLocaleString()}
+          <div className="px-5 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-gray-900 dark:text-white">Steps</span>
+              {editing ? (
+                <Input
+                  type="number"
+                  value={tempGoals.steps}
+                  onChange={(e) => setTempGoals({ ...tempGoals, steps: parseInt(e.target.value) || 0 })}
+                  className="w-28 h-8 text-right text-sm"
+                />
+              ) : (
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-semibold text-gray-900 dark:text-white">{progress.steps.toLocaleString()}</span> / {goals.steps.toLocaleString()}
                 </span>
               )}
             </div>
-            {editing ? (
-              <Input
-                type="number"
-                value={tempGoals.steps}
-                onChange={(e) => setTempGoals({ ...tempGoals, steps: parseInt(e.target.value) || 0 })}
-              />
-            ) : (
+            {!editing && (
               <>
-                <Progress value={getProgressPercentage(progress.steps, goals.steps)} />
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{getProgressPercentage(progress.steps, goals.steps)}% complete</span>
+                <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                    style={{ width: `${getProgressPercentage(progress.steps, goals.steps)}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-xs text-gray-500">{getProgressPercentage(progress.steps, goals.steps)}% complete</span>
                   {progress.steps >= goals.steps && (
-                    <span className="flex items-center gap-1 text-green-600 font-medium">
-                      <Award className="h-4 w-4" /> Goal achieved!
+                    <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                      <Award className="h-3 w-3" /> Done
                     </span>
                   )}
                 </div>
@@ -214,29 +219,35 @@ export function ActivityGoals() {
           </div>
 
           {/* Calories Goal */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Calories Burned Goal (kcal)</Label>
-              {!editing && (
-                <span className="text-sm font-medium">
-                  {progress.calories.toLocaleString()} / {goals.calories.toLocaleString()}
+          <div className="px-5 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-gray-900 dark:text-white">Calories burned</span>
+              {editing ? (
+                <Input
+                  type="number"
+                  value={tempGoals.calories}
+                  onChange={(e) => setTempGoals({ ...tempGoals, calories: parseInt(e.target.value) || 0 })}
+                  className="w-28 h-8 text-right text-sm"
+                />
+              ) : (
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-semibold text-gray-900 dark:text-white">{progress.calories.toLocaleString()}</span> / {goals.calories.toLocaleString()} kcal
                 </span>
               )}
             </div>
-            {editing ? (
-              <Input
-                type="number"
-                value={tempGoals.calories}
-                onChange={(e) => setTempGoals({ ...tempGoals, calories: parseInt(e.target.value) || 0 })}
-              />
-            ) : (
+            {!editing && (
               <>
-                <Progress value={getProgressPercentage(progress.calories, goals.calories)} />
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{getProgressPercentage(progress.calories, goals.calories)}% complete</span>
+                <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-orange-500 rounded-full transition-all duration-300"
+                    style={{ width: `${getProgressPercentage(progress.calories, goals.calories)}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-xs text-gray-500">{getProgressPercentage(progress.calories, goals.calories)}% complete</span>
                   {progress.calories >= goals.calories && (
-                    <span className="flex items-center gap-1 text-green-600 font-medium">
-                      <Award className="h-4 w-4" /> Goal achieved!
+                    <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                      <Award className="h-3 w-3" /> Done
                     </span>
                   )}
                 </div>
@@ -245,75 +256,109 @@ export function ActivityGoals() {
           </div>
 
           {/* Sleep Goal */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Sleep Goal (hours)</Label>
-              {!editing && (
-                <span className="text-sm font-medium">
-                  {progress.sleep.toFixed(1)} / {goals.sleep}
+          <div className="px-5 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-gray-900 dark:text-white">Sleep</span>
+              {editing ? (
+                <Input
+                  type="number"
+                  step="0.5"
+                  value={tempGoals.sleep}
+                  onChange={(e) => setTempGoals({ ...tempGoals, sleep: parseFloat(e.target.value) || 0 })}
+                  className="w-28 h-8 text-right text-sm"
+                />
+              ) : (
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-semibold text-gray-900 dark:text-white">{progress.sleep.toFixed(1)}</span> / {goals.sleep} hours
                 </span>
               )}
             </div>
-            {editing ? (
-              <Input
-                type="number"
-                step="0.5"
-                value={tempGoals.sleep}
-                onChange={(e) => setTempGoals({ ...tempGoals, sleep: parseFloat(e.target.value) || 0 })}
-              />
-            ) : (
+            {!editing && (
               <>
-                <Progress value={getProgressPercentage(progress.sleep, goals.sleep)} />
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{getProgressPercentage(progress.sleep, goals.sleep)}% complete</span>
+                <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-indigo-500 rounded-full transition-all duration-300"
+                    style={{ width: `${getProgressPercentage(progress.sleep, goals.sleep)}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-xs text-gray-500">{getProgressPercentage(progress.sleep, goals.sleep)}% complete</span>
                   {progress.sleep >= goals.sleep && (
-                    <span className="flex items-center gap-1 text-green-600 font-medium">
-                      <Award className="h-4 w-4" /> Goal achieved!
+                    <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                      <Award className="h-3 w-3" /> Done
                     </span>
                   )}
                 </div>
               </>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Health Insights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Health Insights
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+          <h2 className="font-semibold text-gray-900 dark:text-white">Health Insights</h2>
+        </div>
+
+        <div className="p-4 space-y-3">
           {progress.steps < goals.steps * 0.5 && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
-              💡 You're at {getProgressPercentage(progress.steps, goals.steps)}% of your steps goal. Try taking a walk!
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border border-amber-200 dark:border-amber-800">
+              <span className="text-base">💡</span>
+              <div>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Keep Moving!</p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  You're at {getProgressPercentage(progress.steps, goals.steps)}% of your steps goal. Try walking!
+                </p>
+              </div>
             </div>
           )}
           {progress.calories < goals.calories * 0.5 && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
-              💡 Low activity today. Consider some exercise to reach your calorie goal.
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border border-amber-200 dark:border-amber-800">
+              <span className="text-base">💡</span>
+              <div>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Low Activity</p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  Consider some exercise to reach your calorie goal.
+                </p>
+              </div>
             </div>
           )}
           {progress.sleep < 6 && progress.sleep > 0 && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm">
-              ⚠️ You only got {progress.sleep.toFixed(1)} hours of sleep. Aim for at least 7-8 hours for optimal health.
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border border-red-200 dark:border-red-800">
+              <span className="text-base">⚠️</span>
+              <div>
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">Sleep Alert</p>
+                <p className="text-xs text-red-700 dark:text-red-300">
+                  Only {progress.sleep.toFixed(1)} hours of sleep. Aim for 7-8 hours.
+                </p>
+              </div>
             </div>
           )}
           {progress.steps >= goals.steps && progress.calories >= goals.calories && progress.sleep >= goals.sleep && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
-              🌟 Amazing! You've achieved all your daily health goals. Keep up the great work!
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border border-green-200 dark:border-green-800">
+              <span className="text-base">🌟</span>
+              <div>
+                <p className="text-sm font-medium text-green-800 dark:text-green-200">All Goals Achieved!</p>
+                <p className="text-xs text-green-700 dark:text-green-300">
+                  Amazing! Keep up the great work!
+                </p>
+              </div>
             </div>
           )}
           {progress.steps === 0 && progress.calories === 0 && progress.sleep === 0 && (
-            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm">
-              📊 No data recorded today. Sync your wearable device to see your progress.
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+              <span className="text-base">📊</span>
+              <div>
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">No Data Yet</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Sync your wearable device to see progress.
+                </p>
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

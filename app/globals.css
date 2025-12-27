@@ -79,34 +79,34 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.13 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.17 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.17 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --secondary: oklch(0.22 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(0.22 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --accent: oklch(0.22 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-1: oklch(0.65 0.2 180);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --chart-4: oklch(0.627 0.2 200);
+  --chart-5: oklch(0.645 0.2 160);
+  --sidebar: oklch(0.15 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary: oklch(0.65 0.2 180);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.22 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
@@ -116,6 +116,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -128,18 +129,24 @@
 
 /* Custom animations for progress page */
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-20px);
   }
 }
 
 @keyframes glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(234, 179, 8, 0.5);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(234, 179, 8, 0.8), 0 0 60px rgba(234, 179, 8, 0.6);
   }
@@ -149,16 +156,20 @@
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
 }
 
 @keyframes bounce-gentle {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(-5%);
     animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
+
   50% {
     transform: translateY(0);
     animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
@@ -169,16 +180,20 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.7;
     transform: scale(1.05);
@@ -194,12 +209,10 @@
 }
 
 .animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent);
   background-size: 1000px 100%;
   animation: shimmer 2s infinite;
 }
@@ -238,4 +251,339 @@
 
 .delay-700 {
   animation-delay: 700ms;
+}
+
+/* Glassmorphism blob animation */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Download Report Button Styles - From Uiverse.io by adamgiebl */
+.download-report-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 17px;
+  padding: 0.8em 1.5em 0.8em 1.2em;
+  color: white;
+  background: #ad5389;
+  background: linear-gradient(0deg,
+      rgba(77, 54, 208, 1) 0%,
+      rgba(132, 116, 254, 1) 100%);
+  border: none;
+  box-shadow: 0 0.7em 1.5em -0.5em #4d36d0be;
+  letter-spacing: 0.05em;
+  border-radius: 20em;
+  transition: box-shadow 0.2s ease;
+}
+
+.download-report-button svg {
+  margin-right: 8px;
+}
+
+.download-report-button:hover {
+  box-shadow: 0 0.5em 1.5em -0.5em #4d36d0be;
+}
+
+.download-report-button:active {
+  box-shadow: 0 0.3em 1em -0.5em #4d36d0be;
+}
+
+.download-report-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Complete Button - Small variant */
+.complete-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 0.5em 1.2em;
+  color: white;
+  background: linear-gradient(0deg,
+      rgba(13, 148, 136, 1) 0%,
+      rgba(45, 212, 191, 1) 100%);
+  border: none;
+  box-shadow: 0 0.5em 1em -0.3em rgba(13, 148, 136, 0.7);
+  letter-spacing: 0.05em;
+  border-radius: 20em;
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.complete-button:hover {
+  box-shadow: 0 0.4em 1em -0.3em rgba(13, 148, 136, 0.7);
+  transform: translateY(-1px);
+}
+
+.complete-button:active {
+  box-shadow: 0 0.2em 0.8em -0.3em rgba(13, 148, 136, 0.7);
+  transform: translateY(0);
+}
+
+.complete-button:disabled {
+  background: linear-gradient(0deg,
+      rgba(100, 100, 100, 1) 0%,
+      rgba(150, 150, 150, 1) 100%);
+  box-shadow: 0 0.3em 0.8em -0.3em rgba(100, 100, 100, 0.5);
+  cursor: not-allowed;
+}
+
+/* Clinical Notes Card Styles - From Uiverse.io by anniekoop */
+.clinical-note-card {
+  width: 100%;
+  background-color: #f2f3f7;
+  border-radius: 0.75em;
+  cursor: pointer;
+  transition: ease 0.2s;
+  box-shadow: 0.5em 0.5em 1em #d8dae0b1, -0.5em -0.5em 1em #ffffff;
+  border: 1.5px solid #f2f3f7;
+  margin-bottom: 1rem;
+}
+
+.dark .clinical-note-card {
+  background-color: #1e293b;
+  box-shadow: 0.5em 0.5em 1em #0f172a, -0.5em -0.5em 1em #334155;
+  border: 1.5px solid #334155;
+}
+
+.clinical-note-card:hover {
+  background-color: #d3ddf1;
+  border: 1.5px solid #14b8a6;
+}
+
+.dark .clinical-note-card:hover {
+  background-color: #2d3a4f;
+  border: 1.5px solid #2dd4bf;
+}
+
+.clinical-note-container {
+  padding: 1.25em 1.5em;
+  display: flex;
+  flex-direction: row;
+  gap: 0.75em;
+}
+
+.clinical-note-status {
+  width: 0.625em;
+  height: 0.625em;
+  background-color: #14b8a6;
+  margin: 0.375em 0;
+  border-radius: 0.5em;
+  flex-shrink: 0;
+}
+
+.clinical-note-status.priority {
+  background-color: #ef4444;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.clinical-note-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875em;
+  flex: 1;
+}
+
+.clinical-note-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.clinical-note-doctor {
+  font-weight: 600;
+  font-size: 1.1em;
+  color: #1f2937;
+}
+
+.dark .clinical-note-doctor {
+  color: #f3f4f6;
+}
+
+.clinical-note-time {
+  font-size: 0.875em;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.dark .clinical-note-time {
+  color: #9ca3af;
+}
+
+.clinical-note-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+}
+
+.clinical-note-section {
+  padding: 0.75em 1em;
+  border-radius: 0.5em;
+  border-left: 3px solid;
+}
+
+.clinical-note-section.diagnosis {
+  background-color: #dbeafe;
+  border-left-color: #3b82f6;
+}
+
+.dark .clinical-note-section.diagnosis {
+  background-color: #1e3a5f;
+  border-left-color: #60a5fa;
+}
+
+.clinical-note-section.notes {
+  background-color: #f3f4f6;
+  border-left-color: #6b7280;
+}
+
+.dark .clinical-note-section.notes {
+  background-color: #374151;
+  border-left-color: #9ca3af;
+}
+
+.clinical-note-section.recommendation {
+  background-color: #d1fae5;
+  border-left-color: #10b981;
+}
+
+.dark .clinical-note-section.recommendation {
+  background-color: #064e3b;
+  border-left-color: #34d399;
+}
+
+.clinical-note-section.medications {
+  background-color: #f3e8ff;
+  border-left-color: #a855f7;
+}
+
+.dark .clinical-note-section.medications {
+  background-color: #3b0764;
+  border-left-color: #c084fc;
+}
+
+.clinical-note-section-label {
+  font-size: 0.7em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35em;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.clinical-note-section-text {
+  font-size: 0.9em;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.dark .clinical-note-section-text {
+  color: #e5e7eb;
+}
+
+.clinical-note-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+  align-items: center;
+  padding-top: 0.5em;
+}
+
+.clinical-note-btn-primary {
+  font-size: 14px;
+  background-color: transparent;
+  font-weight: 600;
+  color: #14b8a6;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.clinical-note-btn-primary:hover {
+  text-decoration: underline;
+}
+
+.clinical-note-btn-secondary {
+  background-color: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 400;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+}
+
+.clinical-note-btn-secondary:hover {
+  text-decoration: underline;
+}
+
+.dark .clinical-note-btn-secondary {
+  color: #9ca3af;
+}
+
+.clinical-note-priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  padding: 0.25em 0.5em;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-radius: 0.375em;
+  font-size: 0.75em;
+  font-weight: 600;
+}
+
+.dark .clinical-note-priority-badge {
+  background-color: #7f1d1d;
+  color: #fca5a5;
 }

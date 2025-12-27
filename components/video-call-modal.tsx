@@ -33,27 +33,69 @@ export function VideoCallModal({
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const webrtcServiceRef = useRef<WebRTCService | null>(null);
   const { toast } = useToast();
+  const initializingRef = useRef(false);
 
   useEffect(() => {
-    if (isOpen && callId) {
+    if (isOpen && callId && !initializingRef.current) {
+      initializingRef.current = true;
       initializeCall();
     }
 
     return () => {
       cleanup();
+      initializingRef.current = false;
     };
   }, [isOpen, callId]);
 
   async function initializeCall() {
     try {
+      // Prevent double initialization
+      if (webrtcServiceRef.current) {
+        console.log('⚠️ Call already initialized, skipping...');
+        return;
+      }
+      
       console.log('🚀 Initializing call modal...');
       const webrtcService = new WebRTCService();
       webrtcServiceRef.current = webrtcService;
 
-      // Get local media stream
+      // Check available devices first
+      const { hasVideo, hasAudio } = await webrtcService.checkAvailableDevices();
+      
+      if (!hasVideo && !hasAudio) {
+        toast({
+          title: "No devices found",
+          description: "No camera or microphone detected. You can still view the other person's video.",
+          variant: "default",
+        });
+      } else if (!hasVideo) {
+        toast({
+          title: "No camera found",
+          description: "Joining with audio only.",
+          variant: "default",
+        });
+        setVideoEnabled(false);
+      } else if (!hasAudio) {
+        toast({
+          title: "No microphone found",
+          description: "Joining with video only.",
+          variant: "default",
+        });
+        setAudioEnabled(false);
+      }
+
+      // Get local media stream (will handle fallbacks automatically)
       console.log('📹 About to request local stream...');
       const localStream = await webrtcService.getLocalStream(true, true);
-      console.log('✅ Local stream obtained:', localStream.getTracks().map(t => t.kind));
+      const tracks = localStream.getTracks();
+      console.log('✅ Local stream obtained:', tracks.map(t => t.kind));
+      
+      // Update state based on actual tracks received
+      const hasVideoTrack = tracks.some(t => t.kind === 'video');
+      const hasAudioTrack = tracks.some(t => t.kind === 'audio');
+      setVideoEnabled(hasVideoTrack);
+      setAudioEnabled(hasAudioTrack);
+      
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = localStream;
       }
@@ -61,8 +103,22 @@ export function VideoCallModal({
       // Handle remote stream
       const handleRemoteStream = (remoteStream: MediaStream) => {
         console.log('🎥 Remote stream received in modal');
+        console.log('🎥 Remote stream tracks:', remoteStream.getTracks().map(t => `${t.kind}: ${t.enabled}, readyState: ${t.readyState}`));
+        
         if (remoteVideoRef.current) {
+          // Always update srcObject - autoPlay handles playback
           remoteVideoRef.current.srcObject = remoteStream;
+          console.log('🎥 Set remote stream to video element (tracks:', remoteStream.getTracks().length, ')');
+          
+          // Force play after a short delay to ensure srcObject is set
+          const videoElement = remoteVideoRef.current;
+          setTimeout(() => {
+            if (videoElement && videoElement.srcObject && videoElement.paused) {
+              videoElement.play().catch(err => console.log('🎥 Play deferred:', err.message));
+            }
+          }, 100);
+        } else {
+          console.error('❌ remoteVideoRef.current is null!');
         }
         setCallStatus("connected");
       };
@@ -84,11 +140,11 @@ export function VideoCallModal({
           description: `Connected with ${otherUserName}`,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error initializing call:", error);
       toast({
         title: "Call failed",
-        description: "Failed to initialize video call. Please check camera/microphone permissions.",
+        description: error.message || "Failed to initialize video call. Please check camera/microphone permissions.",
         variant: "destructive",
       });
       onClose();
@@ -147,7 +203,12 @@ export function VideoCallModal({
               ref={remoteVideoRef}
               autoPlay
               playsInline
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover bg-slate-800"
+              onLoadedMetadata={() => console.log('🎬 Remote video: loadedmetadata')}
+              onLoadedData={() => console.log('🎬 Remote video: loadeddata')}
+              onPlay={() => console.log('🎬 Remote video: playing')}
+              onCanPlay={() => console.log('🎬 Remote video: canplay')}
+              onError={(e) => console.error('🎬 Remote video error:', e)}
             />
 
             {/* Connecting Overlay */}

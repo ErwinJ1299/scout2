@@ -32,7 +32,7 @@ export default function PatientMessagesPage() {
     }
 
     initializeConversation();
-  }, [userId]);
+  }, [userId, router]);
 
   // Listen for incoming calls
   useEffect(() => {
@@ -75,6 +75,8 @@ export default function PatientMessagesPage() {
 
   async function initializeConversation() {
     try {
+      console.log("Initializing conversation for patient:", userId);
+      
       // Get patient data to find assigned doctor
       const patientDoc = await getDoc(doc(db, "patients", userId));
       if (!patientDoc.exists()) {
@@ -89,6 +91,7 @@ export default function PatientMessagesPage() {
 
       const patientData = patientDoc.data();
       const assignedDoctorId = patientData.doctorId;
+      console.log("Assigned doctor ID:", assignedDoctorId);
 
       if (!assignedDoctorId) {
         toast({
@@ -107,7 +110,7 @@ export default function PatientMessagesPage() {
         setDoctorName(doctorDoc.data().name || "Doctor");
       }
 
-      // Find or create conversation
+      // Find existing conversation
       const conversationsRef = collection(db, "conversations");
       const q = query(
         conversationsRef,
@@ -115,32 +118,27 @@ export default function PatientMessagesPage() {
       );
 
       const snapshot = await getDocs(q);
+      console.log("Found", snapshot.docs.length, "conversations involving this patient");
+      
       let existingConversation = null;
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
+      snapshot.forEach((docSnapshot) => {
+        const data = docSnapshot.data();
+        console.log("Checking conversation:", docSnapshot.id, "participants:", data.participants);
         if (data.participants.includes(assignedDoctorId)) {
-          existingConversation = doc.id;
+          existingConversation = docSnapshot.id;
         }
       });
 
       if (existingConversation) {
+        console.log("Found existing conversation:", existingConversation);
         setConversationId(existingConversation);
       } else {
-        // Create new conversation
-        const newConvRef = doc(collection(db, "conversations"));
-        await setDoc(newConvRef, {
-          participants: [userId, assignedDoctorId],
-          lastMessage: "",
-          lastMessageTime: new Date(),
-          unreadCount: {
-            [userId]: 0,
-            [assignedDoctorId]: 0,
-          },
-        });
-        setConversationId(newConvRef.id);
+        console.log("No existing conversation, setting pending ID");
+        // Use a pending ID - conversation will be created when first message is sent
+        setConversationId(`pending_${assignedDoctorId}`);
       }
-
+      
       setLoading(false);
     } catch (error) {
       console.error("Error initializing conversation:", error);
@@ -193,6 +191,7 @@ export default function PatientMessagesPage() {
   }
 
   if (!conversationId || !doctorId) {
+    console.log("Missing conversationId or doctorId:", { conversationId, doctorId });
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-950 to-slate-900">
         <Card className="max-w-md bg-slate-900 border-slate-700">
@@ -212,6 +211,8 @@ export default function PatientMessagesPage() {
     );
   }
 
+  console.log("About to render ChatInterface with:", { conversationId, userId, doctorId, doctorName });
+
   return (
     <div className="h-screen bg-gradient-to-br from-slate-950 to-slate-900 p-4">
       <div className="max-w-6xl mx-auto h-full">
@@ -223,17 +224,30 @@ export default function PatientMessagesPage() {
           <p className="text-gray-400 text-sm mt-1">
             Chat with your healthcare provider
           </p>
+          {/* Debug info */}
+          <div className="text-xs text-gray-500 mt-2 bg-slate-800 p-2 rounded">
+            <p>ConvID: {conversationId}</p>
+            <p>UserID: {userId}</p>
+            <p>DoctorID: {doctorId}</p>
+            <p>DoctorName: {doctorName}</p>
+          </div>
         </div>
 
-        <div className="h-[calc(100vh-120px)]">
-          <ChatInterface
-            conversationId={conversationId}
-            currentUserId={userId}
-            otherUserId={doctorId}
-            otherUserName={doctorName}
-            otherUserRole="doctor"
-            onVideoCall={handleVideoCall}
-          />
+        <div className="h-[calc(100vh-160px)]">
+          {conversationId && userId && doctorId && doctorName ? (
+            <ChatInterface
+              conversationId={conversationId}
+              currentUserId={userId}
+              otherUserId={doctorId}
+              otherUserName={doctorName}
+              otherUserRole="doctor"
+              onVideoCall={handleVideoCall}
+            />
+          ) : (
+            <div className="text-red-500 p-4">
+              Missing required props: conversationId={conversationId}, userId={userId}, doctorId={doctorId}, doctorName={doctorName}
+            </div>
+          )}
         </div>
 
         {/* Video Call Modal */}

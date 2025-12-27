@@ -256,21 +256,40 @@ export default function WellnessWalletPage() {
               </div>
             </div>
 
+            <Button 
+              className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 h-12 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!conversionInfo?.canConvert}
+              onClick={() => {
+                console.log('Convert Now button clicked!');
+                console.log('Can convert:', conversionInfo?.canConvert);
+                console.log('Current HP:', conversionInfo?.currentHP);
+                console.log('Full conversion info:', conversionInfo);
+                
+                if (conversionInfo?.canConvert) {
+                  setDialogOpen(true);
+                } else {
+                  if ((conversionInfo?.currentHP || 0) < (conversionInfo?.hpToWcRatio || 50)) {
+                    toast({
+                      title: "Not Enough HP",
+                      description: `You need at least ${conversionInfo?.hpToWcRatio || 50} HP to convert`,
+                      variant: "destructive",
+                    });
+                  } else if ((conversionInfo?.dailyLimitRemaining || 0) <= 0) {
+                    toast({
+                      title: "Daily Limit Reached",
+                      description: "You've reached your daily conversion limit. Try again tomorrow!",
+                      variant: "destructive",
+                    });
+                  }
+                }
+              }}
+            >
+              <Sparkles className="h-5 w-5 mr-2" />
+              Convert Now
+              <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
+
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 h-12 text-lg"
-                  disabled={!conversionInfo?.canConvert}
-                  onClick={() => {
-                    console.log('Button clicked! Can convert:', conversionInfo?.canConvert);
-                    console.log('Conversion info:', conversionInfo);
-                  }}
-                >
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  Convert Now
-                  <ArrowRight className="h-5 w-5 ml-2" />
-                </Button>
-              </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle>💎 Convert HP to Wellness Coins</DialogTitle>
