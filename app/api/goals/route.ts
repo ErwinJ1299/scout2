@@ -1,4 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest
+
+export const dynamic = 'force-dynamic';
+, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -117,3 +120,4 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
+

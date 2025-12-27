@@ -13,7 +13,10 @@
  * Body: { patientId: string, readingId?: string }
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest
+
+export const dynamic = 'force-dynamic';
+, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import {
   detectAnomalies,
@@ -427,3 +430,4 @@ export async function GET() {
     notifications: configStatus,
   });
 }
+

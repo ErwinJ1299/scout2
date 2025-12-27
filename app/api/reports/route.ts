@@ -1,4 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest
+
+export const dynamic = 'force-dynamic';
+, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
@@ -181,3 +184,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+

@@ -14,7 +14,10 @@
  * PATCH /api/alerts                      - Acknowledge an alert
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest
+
+export const dynamic = 'force-dynamic';
+, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { AlertStatus, AlertSeverity, AcknowledgeAlertRequest } from '@/types';
 
@@ -320,3 +323,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

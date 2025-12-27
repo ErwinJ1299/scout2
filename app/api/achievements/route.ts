@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
+// Force dynamic rendering - don't try to generate this at build time
+export const dynamic = 'force-dynamic';
+
 // Achievement types and criteria
 const ACHIEVEMENTS = {
   FIRST_STEPS: {
