@@ -40,7 +40,7 @@
     "framer-motion": "^12.23.24",
     "install": "^0.13.0",
     "lucide-react": "^0.553.0",
-    "next": "16.0.1",
+    "next": "^16.1.1-canary.6",
     "npm": "^11.6.3",
     "openai": "^6.9.0",
     "react": "19.2.0",
