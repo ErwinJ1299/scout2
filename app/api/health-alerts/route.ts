@@ -1,7 +1,6 @@
-import { NextRequest
+import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 
 interface Alert {
