@@ -40,8 +40,8 @@ export function WearableDevices() {
       for (const device of devices) {
         // Handle both Firestore Timestamp and Date objects
         const lastSyncTime = device.lastSync
-          ? (typeof device.lastSync.toMillis === 'function'
-            ? device.lastSync.toMillis()
+          ? ((device.lastSync as any)?.toMillis && typeof (device.lastSync as any).toMillis === 'function'
+            ? (device.lastSync as any).toMillis()
             : new Date(device.lastSync).getTime())
           : 0;
         const now = Date.now();

@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate()
-    }));
+    })) as any[];
 
     // Calculate statistics
     const stats = {
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     // Calculate averages
     let hrCount = 0, stepsCount = 0, glucoseCount = 0, bpCount = 0;
     
-    readings.forEach(r => {
+    readings.forEach((r: any) => {
       if (r.heartRate) { stats.avgHeartRate += r.heartRate; hrCount++; }
       if (r.steps) { stats.avgSteps += r.steps; stepsCount++; }
       if (r.glucose) { stats.avgGlucose += r.glucose; glucoseCount++; }
@@ -81,8 +81,8 @@ export async function GET(request: NextRequest) {
     const secondHalf = readings.slice(0, midpoint);
 
     const calculateTrend = (metric: string) => {
-      const first = firstHalf.filter(r => r[metric]).reduce((sum, r) => sum + r[metric], 0) / firstHalf.filter(r => r[metric]).length;
-      const second = secondHalf.filter(r => r[metric]).reduce((sum, r) => sum + r[metric], 0) / secondHalf.filter(r => r[metric]).length;
+      const first = firstHalf.filter((r: any) => r[metric]).reduce((sum: number, r: any) => sum + r[metric], 0) / firstHalf.filter((r: any) => r[metric]).length;
+      const second = secondHalf.filter((r: any) => r[metric]).reduce((sum: number, r: any) => sum + r[metric], 0) / secondHalf.filter((r: any) => r[metric]).length;
       
       if (!first || !second) return 'stable';
       const change = ((second - first) / first) * 100;

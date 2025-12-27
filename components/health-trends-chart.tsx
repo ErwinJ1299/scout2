@@ -50,13 +50,13 @@ export function HealthTrendsChart() {
       const metrics = snapshot.docs.map(doc => ({
         ...doc.data(),
         timestamp: doc.data().timestamp.toDate()
-      }));
+      })) as any[];
 
       // Group by metric type and date
-      const heartRate = aggregateByDate(metrics.filter(m => m.metricType === 'heart_rate'));
-      const steps = aggregateByDate(metrics.filter(m => m.metricType === 'steps'));
-      const sleep = aggregateByDate(metrics.filter(m => m.metricType === 'sleep'));
-      const calories = aggregateByDate(metrics.filter(m => m.metricType === 'calories'));
+      const heartRate = aggregateByDate(metrics.filter((m: any) => m.metricType === 'heart_rate'));
+      const steps = aggregateByDate(metrics.filter((m: any) => m.metricType === 'steps'));
+      const sleep = aggregateByDate(metrics.filter((m: any) => m.metricType === 'sleep'));
+      const calories = aggregateByDate(metrics.filter((m: any) => m.metricType === 'calories'));
 
       setHeartRateData(heartRate);
       setStepsData(steps);
@@ -86,7 +86,7 @@ export function HealthTrendsChart() {
       return acc;
     }, {} as Record<string, number[]>);
 
-    return Object.entries(grouped)
+    return (Object.entries(grouped) as [string, number[]][])
       .map(([date, values]) => ({
         date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         value: Math.round(values.reduce((sum, val) => sum + val, 0) / values.length)

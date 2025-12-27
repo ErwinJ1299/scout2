@@ -17,14 +17,14 @@ interface ChallengeCardProps {
   isDoctor?: boolean;
 }
 
-const metricIcons = {
+const metricIcons: Record<string, any> = {
   steps: Footprints,
   hydration: Droplets,
   sleep: Moon,
   custom: Activity,
 };
 
-const metricColors = {
+const metricColors: Record<string, string> = {
   steps: 'from-blue-500 to-cyan-500',
   hydration: 'from-cyan-500 to-teal-500',
   sleep: 'from-purple-500 to-indigo-500',

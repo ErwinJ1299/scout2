@@ -172,12 +172,12 @@ export interface RewardRedemption {
 
 // ==================== OUTCOME-BASED REWARDS ====================
 
-export type MetricType = 'glucose' | 'bp' | 'steps' | 'weight';
+export type HealthMetricType = 'glucose' | 'bp' | 'steps' | 'weight';
 export type ImprovementDirection = 'decrease' | 'increase' | 'range';
 
 export interface OutcomeRule {
   id: string;
-  metric: MetricType;
+  metric: HealthMetricType;
   description: string;
   windowDays: number; // Evaluation window (usually 7 or 14)
   minChange: number; // Minimum improvement threshold
@@ -194,7 +194,7 @@ export interface OutcomeRule {
 export interface OutcomeReward {
   id: string;
   userId: string;
-  metric: MetricType;
+  metric: HealthMetricType;
   ruleId: string; // Which rule triggered this reward
   periodStart: Date | any; // Evaluation window start
   periodEnd: Date | any; // Evaluation window end
@@ -208,7 +208,7 @@ export interface OutcomeReward {
 
 export interface OutcomeEvaluationResult {
   ruleId: string;
-  metric: MetricType;
+  metric: HealthMetricType;
   eligible: boolean;
   reason?: string;
   improvementValue?: number;

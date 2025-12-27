@@ -63,14 +63,14 @@ export function DoctorPatientMetrics() {
         const metrics = metricsSnapshot.docs.map(doc => ({
           ...doc.data(),
           timestamp: doc.data().timestamp.toDate()
-        }));
+        })) as any[];
 
         // Process metrics by type
         const latestMetrics: any = {};
         const alerts: string[] = [];
 
         ['heart_rate', 'steps', 'sleep', 'calories'].forEach(type => {
-          const typeMetrics = metrics.filter(m => m.metricType === type);
+          const typeMetrics = metrics.filter((m: any) => m.metricType === type);
           if (typeMetrics.length > 0) {
             const latest = typeMetrics[0];
             const previous = typeMetrics[1];
