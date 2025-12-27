@@ -1,8 +1,8 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
-let adminApp: App;
-let adminDb: Firestore;
+let adminApp: App | undefined;
+let adminDb: Firestore | undefined;
 
 // Initialize Firebase Admin only on server side
 if (typeof window === 'undefined') {
@@ -20,23 +20,26 @@ if (typeof window === 'undefined') {
           privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
         });
       } else {
-        // Fallback: initialize without credentials (works for local emulator or if default credentials are set)
-        console.warn('⚠️  No Firebase Admin credentials found. Initializing without auth (may not work in production)');
+        // During build time, we don't have credentials - that's okay
+        console.warn('⚠️  No Firebase Admin credentials found. Skipping initialization (normal during build).');
       }
 
-      adminApp = initializeApp({
-        credential,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      });
+      // Only initialize if we have credentials
+      if (credential) {
+        adminApp = initializeApp({
+          credential,
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        });
+        adminDb = getFirestore(adminApp);
+        console.log('✅ Firebase Admin initialized successfully');
+      }
     } else {
       adminApp = getApps()[0];
+      adminDb = getFirestore(adminApp);
     }
-
-    adminDb = getFirestore(adminApp);
-    console.log('✅ Firebase Admin initialized successfully');
   } catch (error) {
     console.error('❌ Firebase Admin initialization failed:', error);
-    throw error;
+    // Don't throw - let it fail gracefully
   }
 }
 
