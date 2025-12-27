@@ -1,4 +1,4 @@
-# 🏥 HealthVerse - AI-Powered Health Monitoring Platform
+# 🏥 Medora- AI-Powered Health Monitoring Platform
 
 > **Transforming chronic disease management through AI, gamification, and seamless doctor-patient collaboration**
 
