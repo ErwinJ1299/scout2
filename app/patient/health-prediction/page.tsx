@@ -38,8 +38,10 @@ interface PredictionResult {
 
 interface PredictionResponse {
   success: boolean;
-  prediction: PredictionResult;
-  timestamp: string;
+  prediction?: PredictionResult;
+  timestamp?: string;
+  error?: string;
+  needsData?: boolean;
 }
 
 export default function HealthPredictionPage() {
@@ -126,14 +128,14 @@ export default function HealthPredictionPage() {
 
       const data: PredictionResponse = await response.json();
       
-      if (data.success) {
+      if (data.success && data.prediction) {
         setPrediction(data.prediction);
         toast({
           title: 'Prediction Complete',
           description: `Your health risk level is ${data.prediction.risk_level.toUpperCase()}`
         });
       } else {
-        throw new Error('Failed to generate prediction');
+        throw new Error(data.error || 'Failed to generate prediction');
       }
     } catch (error: any) {
       toast({
@@ -209,7 +211,7 @@ export default function HealthPredictionPage() {
         </div>
         <Button 
           onClick={getPrediction} 
-          disabled={predicting || historicalData.length < 3}
+          disabled={predicting}
           className="gap-2"
         >
           {predicting ? (
@@ -226,16 +228,15 @@ export default function HealthPredictionPage() {
         </Button>
       </div>
 
-      {historicalData.length < 3 && (
+      {historicalData.length === 0 && (
         <Card className="border-yellow-500">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              Insufficient Data
+              No Data Yet
             </CardTitle>
             <CardDescription>
-              At least 3 days of health metrics are required for accurate predictions. 
-              Currently you have {historicalData.length} days of data.
+              No health metrics were found for your account yet. Add readings to improve prediction quality.
             </CardDescription>
           </CardHeader>
         </Card>

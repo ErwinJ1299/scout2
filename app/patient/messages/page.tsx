@@ -45,12 +45,12 @@ export default function PatientMessagesPage() {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
           const callData = change.doc.data();
-          
+
           // Only accept calls that are less than 60 seconds old
           const callTime = callData.createdAt?.toMillis() || 0;
           const now = Date.now();
           const callAge = now - callTime;
-          
+
           if (callAge < 60000) { // 60 seconds
             setIncomingCall(change.doc.id);
             setCallId(change.doc.id);
@@ -60,7 +60,7 @@ export default function PatientMessagesPage() {
             });
           }
         }
-        
+
         // Clear incoming call if status changes or call is removed
         if (change.type === "modified" || change.type === "removed") {
           if (change.doc.id === incomingCall) {
@@ -76,7 +76,7 @@ export default function PatientMessagesPage() {
   async function initializeConversation() {
     try {
       console.log("Initializing conversation for patient:", userId);
-      
+
       // Get patient data to find assigned doctor
       const patientDoc = await getDoc(doc(db, "patients", userId));
       if (!patientDoc.exists()) {
@@ -119,7 +119,7 @@ export default function PatientMessagesPage() {
 
       const snapshot = await getDocs(q);
       console.log("Found", snapshot.docs.length, "conversations involving this patient");
-      
+
       let existingConversation = null;
 
       snapshot.forEach((docSnapshot) => {
@@ -138,7 +138,7 @@ export default function PatientMessagesPage() {
         // Use a pending ID - conversation will be created when first message is sent
         setConversationId(`pending_${assignedDoctorId}`);
       }
-      
+
       setLoading(false);
     } catch (error) {
       console.error("Error initializing conversation:", error);
@@ -214,8 +214,18 @@ export default function PatientMessagesPage() {
   console.log("About to render ChatInterface with:", { conversationId, userId, doctorId, doctorName });
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-950 to-slate-900 p-4">
-      <div className="max-w-6xl mx-auto h-full">
+    <div className="h-screen bg-gradient-to-br from-slate-950 to-slate-900 p-4 relative">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 z-0 opacity-40"
+        style={{
+          backgroundImage: "url('/healthcoach-bg.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+      <div className="max-w-6xl mx-auto h-full relative z-10">
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-white flex items-center">
             <MessageCircle className="mr-2 text-cyan-500" />

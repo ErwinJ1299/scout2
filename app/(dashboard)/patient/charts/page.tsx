@@ -26,7 +26,7 @@ export default function ChartsPage() {
     if (!user) return;
 
     const unsubscribePatient = FirestoreService.subscribeToPatient(user.uid, setPatient);
-    const unsubscribeReadings = FirestoreService.subscribeToReadings(user.uid, setReadings, 30);
+    const unsubscribeReadings = FirestoreService.subscribeToReadings(user.uid, setReadings);
 
     return () => {
       unsubscribePatient();

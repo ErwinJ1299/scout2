@@ -86,6 +86,9 @@ export class AuthService {
     let message = 'An error occurred during authentication';
 
     switch (errorCode) {
+      case 'auth/invalid-credential':
+        message = 'Email or password is incorrect';
+        break;
       case 'auth/email-already-in-use':
         message = 'This email is already registered';
         break;
@@ -102,10 +105,10 @@ export class AuthService {
         message = 'This account has been disabled';
         break;
       case 'auth/user-not-found':
-        message = 'No account found with this email';
+        message = 'Email or password is incorrect';
         break;
       case 'auth/wrong-password':
-        message = 'Incorrect password';
+        message = 'Email or password is incorrect';
         break;
       case 'auth/too-many-requests':
         message = 'Too many attempts. Please try again later';

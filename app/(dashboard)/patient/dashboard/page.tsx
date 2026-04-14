@@ -20,6 +20,8 @@ import {
   Target,
   UserPlus,
   FileText,
+  Clock,
+  Check,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { HealthCharts } from '@/components/health-charts';
@@ -429,61 +431,113 @@ export default function PatientDashboard() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-6 space-y-3">
+            <CardContent className="pt-6 space-y-4">
               {todayReminders.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                    <Bell className="h-8 w-8 text-gray-400" />
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl flex items-center justify-center shadow-inner">
+                    <Bell className="h-10 w-10 text-indigo-400 dark:text-indigo-500" />
                   </div>
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">No reminders for today</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Add a reminder to get started</p>
+                  <p className="text-lg font-medium text-gray-900 dark:text-gray-100">All caught up!</p>
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">No pending tasks for today</p>
                 </div>
               ) : (
                 todayReminders.map((reminder) => {
                   const isCompleted = completedTaskIds.has(reminder.id);
-                  const typeColors: Record<string, string> = {
-                    medicine: 'from-pink-50 to-rose-50 dark:from-pink-950/40 dark:to-rose-950/40 border-pink-200 dark:border-pink-800',
-                    exercise: 'from-green-50 to-emerald-50 dark:from-green-950/40 dark:to-emerald-950/40 border-green-200 dark:border-green-800',
-                    checkup: 'from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border-blue-200 dark:border-blue-800',
-                    meal: 'from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-amber-950/40 border-orange-200 dark:border-orange-800',
-                    water: 'from-cyan-50 to-sky-50 dark:from-cyan-950/40 dark:to-sky-950/40 border-cyan-200 dark:border-cyan-800',
-                    other: 'from-gray-50 to-slate-50 dark:from-gray-950/40 dark:to-slate-950/40 border-gray-200 dark:border-gray-800',
+                  const typeStyles: Record<string, { bg: string, icon: string, border: string, text: string }> = {
+                    medicine: {
+                      bg: 'bg-rose-50 dark:bg-rose-950/30',
+                      icon: 'bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400',
+                      border: 'border-rose-100 dark:border-rose-900/50',
+                      text: 'text-rose-700 dark:text-rose-300'
+                    },
+                    exercise: {
+                      bg: 'bg-emerald-50 dark:bg-emerald-950/30',
+                      icon: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400',
+                      border: 'border-emerald-100 dark:border-emerald-900/50',
+                      text: 'text-emerald-700 dark:text-emerald-300'
+                    },
+                    checkup: {
+                      bg: 'bg-blue-50 dark:bg-blue-950/30',
+                      icon: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400',
+                      border: 'border-blue-100 dark:border-blue-900/50',
+                      text: 'text-blue-700 dark:text-blue-300'
+                    },
+                    meal: {
+                      bg: 'bg-amber-50 dark:bg-amber-950/30',
+                      icon: 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400',
+                      border: 'border-amber-100 dark:border-amber-900/50',
+                      text: 'text-amber-700 dark:text-amber-300'
+                    },
+                    water: {
+                      bg: 'bg-cyan-50 dark:bg-cyan-950/30',
+                      icon: 'bg-cyan-100 dark:bg-cyan-900/50 text-cyan-600 dark:text-cyan-400',
+                      border: 'border-cyan-100 dark:border-cyan-900/50',
+                      text: 'text-cyan-700 dark:text-cyan-300'
+                    },
+                    other: {
+                      bg: 'bg-slate-50 dark:bg-slate-900/30',
+                      icon: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
+                      border: 'border-slate-100 dark:border-slate-800',
+                      text: 'text-slate-700 dark:text-slate-300'
+                    },
                   };
+                  const style = typeStyles[reminder.type] || typeStyles.other;
+
                   return (
                     <div
                       key={reminder.id}
-                      className={`group flex items-center justify-between p-4 bg-gradient-to-r ${typeColors[reminder.type] || typeColors.other} rounded-xl border transition-all duration-300 hover:shadow-md ${isCompleted ? 'opacity-60' : 'hover:-translate-x-1'}`}
+                      className={`relative group overflow-hidden rounded-2xl border-2 transition-all duration-300 ${isCompleted
+                          ? 'bg-gray-50/50 dark:bg-gray-900/20 border-gray-100 dark:border-gray-800 grayscale opacity-70'
+                          : `bg-white dark:bg-gray-900 ${style.border} hover:border-transparent hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.3)] hover:-translate-y-1`
+                        }`}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
-                          <span className="text-2xl">
+                      {/* Gradient Background for hover state */}
+                      {!isCompleted && (
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${style.bg} pointer-events-none`} />
+                      )}
+
+                      <div className="relative p-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-sm transition-transform duration-300 group-hover:scale-110 ${style.icon}`}>
                             {reminder.type === 'medicine' && '💊'}
                             {reminder.type === 'exercise' && '🏃'}
                             {reminder.type === 'checkup' && '🏥'}
                             {reminder.type === 'meal' && '🍽️'}
                             {reminder.type === 'water' && '💧'}
                             {reminder.type === 'other' && '📌'}
-                          </span>
-                        </div>
-                        <div>
-                          <p className={`font-semibold text-gray-900 dark:text-gray-100 ${isCompleted ? 'line-through' : ''}`}>{reminder.label}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">{reminder.time}</span>
-                            {isCompleted && (
-                              <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 rounded-full text-xs font-semibold text-green-600 dark:text-green-400">
-                                ✓ Completed
+                          </div>
+                          <div>
+                            <h4 className={`text-lg font-bold ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-900 dark:text-gray-100'}`}>
+                              {reminder.label}
+                            </h4>
+                            <div className="flex items-center gap-3 mt-1.5">
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${style.bg} ${style.text}`}>
+                                <Clock className="h-3 w-3" />
+                                {reminder.time}
                               </span>
-                            )}
+                            </div>
                           </div>
                         </div>
+
+                        <Button
+                          size="lg"
+                          onClick={(e) => { e.stopPropagation(); handleCompleteTask(reminder.id, reminder.type); }}
+                          disabled={isCompleted}
+                          className={`h-12 px-6 rounded-xl font-bold transition-all duration-300 shadow-md hover:shadow-lg ${isCompleted
+                              ? 'bg-gray-100 text-gray-400 hover:bg-gray-100 border border-gray-200'
+                              : 'bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 hover:scale-105 active:scale-95'
+                            }`}
+                        >
+                          {isCompleted ? (
+                            <span className="flex items-center gap-2">
+                              <Check className="h-5 w-5" />
+                              Done
+                            </span>
+                          ) : (
+                            'Complete'
+                          )}
+                        </Button>
                       </div>
-                      <button
-                        className="complete-button"
-                        onClick={(e) => { e.stopPropagation(); handleCompleteTask(reminder.id, reminder.type); }}
-                        disabled={isCompleted}
-                      >
-                        {isCompleted ? '✓ Done' : 'Complete'}
-                      </button>
                     </div>
                   );
                 })
@@ -748,8 +802,8 @@ export default function PatientDashboard() {
                         </div>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${reminder.isActive
-                          ? 'bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                        ? 'bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                         }`}>
                         {reminder.isActive ? 'Active' : 'Inactive'}
                       </span>

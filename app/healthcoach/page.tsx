@@ -246,8 +246,18 @@ export default function HealthCoachPage() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-6">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen p-4 md:p-6 relative">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 z-0 opacity-60"
+        style={{
+          backgroundImage: "url('/healthcoach-bg.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+      <div className="max-w-3xl mx-auto relative z-10">
         {/* Modern Chat Container */}
         <div className="bg-white/[0.03] backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
           {/* Header */}
@@ -279,11 +289,12 @@ export default function HealthCoachPage() {
                 </Select>
                 <button
                   onClick={() => setVoiceEnabled(!voiceEnabled)}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${voiceEnabled
-                    ? "bg-teal-500 text-white shadow-lg shadow-teal-500/25"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10"
+                  className={`w-9 h-9 rounded-xl border ring-1 flex items-center justify-center transition-all ${voiceEnabled
+                    ? "bg-teal-500 text-white border-teal-300 ring-teal-300/40 shadow-lg shadow-teal-500/30"
+                    : "bg-slate-900/75 text-teal-300 border-teal-400/40 ring-teal-500/25 hover:bg-teal-600 hover:text-white hover:border-teal-300"
                     }`}
                   title={voiceEnabled ? "Voice enabled" : "Voice disabled"}
+                  aria-label={voiceEnabled ? "Voice enabled" : "Voice disabled"}
                 >
                   {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                 </button>
@@ -377,11 +388,12 @@ export default function HealthCoachPage() {
               <button
                 type="button"
                 onClick={handleVoiceInput}
-                className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-teal-400 hover:bg-white/10 transition-all"
+                className="w-11 h-11 shrink-0 rounded-xl bg-slate-900/75 border border-teal-400/40 ring-1 ring-teal-500/25 flex items-center justify-center text-teal-300 hover:text-white hover:bg-teal-600 hover:border-teal-400 transition-all shadow-md shadow-teal-900/30 disabled:opacity-60"
                 disabled={loading}
                 title="Voice input"
+                aria-label="Voice input"
               >
-                <Mic size={18} />
+                <Mic size={18} className="drop-shadow-sm" />
               </button>
               <button
                 type="submit"

@@ -1,6 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 
+function toDate(value: any): Date | undefined {
+  if (!value) return undefined;
+  if (value instanceof Date) return value;
+  if (typeof value?.toDate === 'function') return value.toDate();
+  if (typeof value === 'string' || typeof value === 'number') {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  }
+  return undefined;
+}
+
+function extractTimestamp(data: any): Date | undefined {
+  return toDate(data.createdAt) || toDate(data.timestamp) || toDate(data.recordedAt) || toDate(data.date);
+}
+
+function toNumber(value: any): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
+function pickMetric(data: any, keys: string[]): number | undefined {
+  for (const key of keys) {
+    const n = toNumber(data[key]);
+    if (typeof n === 'number') return n;
+  }
+  return undefined;
+}
+
 // Calculate mean of array
 function mean(arr: number[]): number {
   return arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
@@ -77,6 +109,16 @@ function calculateRiskScore(features: any): number {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!adminDb) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Firebase Admin is not configured. Set FIREBASE_SERVICE_ACCOUNT_KEY or FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY.',
+        },
+        { status: 500 }
+      );
+    }
+
     const { userId } = await request.json();
 
     if (!userId) {
@@ -89,10 +131,21 @@ export async function POST(request: NextRequest) {
     console.log('📊 Fetching REAL health data for user:', userId);
 
     // Fetch ALL readings for this user using Firebase Admin SDK
-    const snapshot = await adminDb
+    let snapshot = await adminDb
       .collection('readings')
       .where('patientId', '==', userId)
       .get();
+
+    // Support legacy schema where readings are saved with userId instead of patientId.
+    if (snapshot.empty) {
+      const legacySnapshot = await adminDb
+        .collection('readings')
+        .where('userId', '==', userId)
+        .get();
+      if (!legacySnapshot.empty) {
+        snapshot = legacySnapshot;
+      }
+    }
     
     if (snapshot.empty) {
       return NextResponse.json({
@@ -108,26 +161,59 @@ export async function POST(request: NextRequest) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    const docs = snapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        return { data, timestamp: extractTimestamp(data) };
+      })
+      .sort((a, b) => {
+        const aTs = a.timestamp?.getTime() ?? 0;
+        const bTs = b.timestamp?.getTime() ?? 0;
+        return aTs - bTs;
+      });
+
+    const recentDocs = docs.filter((item) => {
+      if (!item.timestamp) return true;
+      return item.timestamp >= thirtyDaysAgo;
+    });
+
+    const sourceDocs = recentDocs.length > 0 ? recentDocs : docs;
+    if (recentDocs.length === 0) {
+      console.log('ℹ️  No readings in last 30 days. Using all available historical readings for prediction.');
+    }
+
     const heartRateData: number[] = [];
     const stepsData: number[] = [];
     const glucoseData: number[] = [];
     const bpSystolicData: number[] = [];
 
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const timestamp = data.createdAt?.toDate();
-      
-      // Skip if older than 30 days
-      if (timestamp && timestamp < thirtyDaysAgo) {
-        return;
-      }
+    sourceDocs.forEach(({ data }) => {
+      const heartRate = pickMetric(data, ['heartRate', 'heart_rate']);
+      const steps = pickMetric(data, ['steps', 'stepCount', 'step_count']);
+      const glucose = pickMetric(data, ['glucose', 'bloodGlucose', 'blood_glucose']);
+      const bpSystolic = pickMetric(data, ['bpSystolic', 'bp_systolic', 'bloodPressureSystolic']);
 
-      // Extract readings data
-      if (data.heartRate) heartRateData.push(data.heartRate);
-      if (data.steps) stepsData.push(data.steps);
-      if (data.glucose) glucoseData.push(data.glucose);
-      if (data.bpSystolic) bpSystolicData.push(data.bpSystolic);
+      if (heartRate !== undefined) heartRateData.push(heartRate);
+      if (steps !== undefined) stepsData.push(steps);
+      if (glucose !== undefined) glucoseData.push(glucose);
+      if (bpSystolic !== undefined) bpSystolicData.push(bpSystolic);
     });
+
+    if (
+      heartRateData.length === 0 &&
+      stepsData.length === 0 &&
+      glucoseData.length === 0 &&
+      bpSystolicData.length === 0
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Health readings were found, but none include supported metrics (heart rate, steps, glucose, blood pressure).',
+          needsData: true,
+        },
+        { status: 400 }
+      );
+    }
 
     console.log('🔍 Data extracted from readings collection');
 

@@ -208,13 +208,17 @@ export class FirestoreService {
   }
 
 
-  static async getReadings(patientId: string, limitCount = 30): Promise<Reading[]> {
-    const q = query(
-      collection(db, 'readings'),
+  static async getReadings(patientId: string, limitCount?: number): Promise<Reading[]> {
+    const constraints: any[] = [
       where('patientId', '==', patientId),
       orderBy('createdAt', 'desc'),
-      limit(limitCount)
-    );
+    ];
+
+    if (typeof limitCount === 'number') {
+      constraints.push(limit(limitCount));
+    }
+
+    const q = query(collection(db, 'readings'), ...constraints);
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map((doc) => {
       const data = doc.data() as FirestoreReading;
@@ -228,14 +232,18 @@ export class FirestoreService {
   static subscribeToReadings(
     patientId: string,
     callback: (readings: Reading[]) => void,
-    limitCount = 30
+    limitCount?: number
   ) {
-    const q = query(
-      collection(db, 'readings'),
+    const constraints: any[] = [
       where('patientId', '==', patientId),
       orderBy('createdAt', 'desc'),
-      limit(limitCount)
-    );
+    ];
+
+    if (typeof limitCount === 'number') {
+      constraints.push(limit(limitCount));
+    }
+
+    const q = query(collection(db, 'readings'), ...constraints);
     return onSnapshot(q, (querySnapshot) => {
       const readings = querySnapshot.docs.map((doc) => {
         const data = doc.data() as FirestoreReading;

@@ -7,6 +7,13 @@ const DAILY_HP_LIMIT = 2000; // Max 2000 HP conversion per day
 
 export async function POST(request: NextRequest) {
   try {
+    if (!adminDb) {
+      return NextResponse.json(
+        { error: 'Firebase Admin is not configured' },
+        { status: 500 }
+      );
+    }
+
     const { userId, hpAmount } = await request.json();
 
     if (!userId || !hpAmount) {
@@ -28,15 +35,38 @@ export async function POST(request: NextRequest) {
 
     // Run transaction to ensure atomicity
     const result = await adminDb.runTransaction(async (transaction) => {
-      // Get gamification progress for HP
-      const gamificationRef = adminDb.collection('GamificationProgress').doc(userId);
+      // Get HP source. Primary: gamification (current app). Fallback: GamificationProgress (legacy).
+      const gamificationRef = adminDb.collection('gamification').doc(userId);
+      const legacyGamificationRef = adminDb.collection('GamificationProgress').doc(userId);
+      const patientRef = adminDb.collection('patients').doc(userId);
+
       const gamificationDoc = await transaction.get(gamificationRef);
-      
-      if (!gamificationDoc.exists) {
-        throw new Error('Gamification progress not found');
+      const legacyGamificationDoc = gamificationDoc.exists
+        ? null
+        : await transaction.get(legacyGamificationRef);
+      const patientDoc = (!gamificationDoc.exists && !legacyGamificationDoc?.exists)
+        ? await transaction.get(patientRef)
+        : null;
+
+      const hpSourceDoc = gamificationDoc.exists
+        ? gamificationDoc
+        : legacyGamificationDoc?.exists
+          ? legacyGamificationDoc
+          : patientDoc?.exists
+            ? patientDoc
+            : null;
+
+      if (!hpSourceDoc) {
+        throw new Error('No HP source found for this user');
       }
-      
-      const gamificationData = gamificationDoc.data();
+
+      const hpSourceRef = gamificationDoc.exists
+        ? gamificationRef
+        : legacyGamificationDoc?.exists
+          ? legacyGamificationRef
+          : patientRef;
+
+      const gamificationData = hpSourceDoc.data();
       const currentHP = gamificationData?.totalPoints || 0;
 
       // Get user stats for WC and conversion tracking
@@ -67,8 +97,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Update gamification progress (deduct HP)
-      transaction.update(gamificationRef, {
+      // Update HP source (deduct HP)
+      transaction.update(hpSourceRef, {
         totalPoints: currentHP - hpAmount,
         lastUpdated: FieldValue.serverTimestamp(),
       });
@@ -125,6 +155,13 @@ export async function POST(request: NextRequest) {
 // Get conversion info
 export async function GET(request: NextRequest) {
   try {
+    if (!adminDb) {
+      return NextResponse.json(
+        { error: 'Firebase Admin is not configured' },
+        { status: 500 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -135,14 +172,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get gamification progress for HP
-    const gamificationDoc = await adminDb.collection('GamificationProgress').doc(userId).get();
-    const gamificationData = gamificationDoc.exists ? gamificationDoc.data() : null;
+    // Get HP from primary source (gamification), fallback to legacy and then patients.
+    const gamificationDoc = await adminDb.collection('gamification').doc(userId).get();
+    const legacyGamificationDoc = gamificationDoc.exists
+      ? null
+      : await adminDb.collection('GamificationProgress').doc(userId).get();
+    const patientDoc = (!gamificationDoc.exists && !legacyGamificationDoc?.exists)
+      ? await adminDb.collection('patients').doc(userId).get()
+      : null;
+
+    const hpDoc = gamificationDoc.exists
+      ? gamificationDoc
+      : legacyGamificationDoc?.exists
+        ? legacyGamificationDoc
+        : patientDoc?.exists
+          ? patientDoc
+          : null;
+
+    const gamificationData = hpDoc?.data() || null;
     const currentHP = gamificationData?.totalPoints || 0;
 
     console.log('Wellness API - Get conversion info:', {
       userId,
-      gamificationExists: gamificationDoc.exists,
+      gamificationExists: !!hpDoc,
       gamificationData: gamificationData,
       currentHP: currentHP
     });
